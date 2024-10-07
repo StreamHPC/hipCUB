@@ -191,7 +191,8 @@ int main(int argc, char** argv)
 
     // Initialize device input
     HIP_CHECK(hipMemcpy(d_in, h_in, sizeof(int) * num_items, hipMemcpyHostToDevice));
-    HIP_CHECK(hipMemcpy(d_flags, h_flags, sizeof(unsigned char) * num_items, hipMemcpyHostToDevice));
+    HIP_CHECK(
+        hipMemcpy(d_flags, h_flags, sizeof(unsigned char) * num_items, hipMemcpyHostToDevice));
 
     // Allocate device output array and num selected
     int     *d_out            = NULL;
@@ -202,11 +203,23 @@ int main(int argc, char** argv)
     // Allocate temporary storage
     void            *d_temp_storage = NULL;
     size_t          temp_storage_bytes = 0;
-    HIP_CHECK(hipcub::DeviceSelect::Flagged(d_temp_storage, temp_storage_bytes, d_in, d_flags, d_out, d_num_selected_out, num_items));
+    HIP_CHECK(hipcub::DeviceSelect::Flagged(d_temp_storage,
+                                            temp_storage_bytes,
+                                            d_in,
+                                            d_flags,
+                                            d_out,
+                                            d_num_selected_out,
+                                            num_items));
     HIP_CHECK(g_allocator.DeviceAllocate(&d_temp_storage, temp_storage_bytes));
 
     // Run
-    HIP_CHECK(hipcub::DeviceSelect::Flagged(d_temp_storage, temp_storage_bytes, d_in, d_flags, d_out, d_num_selected_out, num_items));
+    HIP_CHECK(hipcub::DeviceSelect::Flagged(d_temp_storage,
+                                            temp_storage_bytes,
+                                            d_in,
+                                            d_flags,
+                                            d_out,
+                                            d_num_selected_out,
+                                            num_items));
 
     // Check for correctness (and display results, if specified)
     int compare = CompareDeviceResults(h_reference, d_out, num_selected, true, g_verbose);
@@ -216,13 +229,20 @@ int main(int argc, char** argv)
     AssertEquals(0, compare);
 
     // Cleanup
-    if (h_in) delete[] h_in;
-    if (h_reference) delete[] h_reference;
-    if (d_out) HIP_CHECK(g_allocator.DeviceFree(d_out));
-    if (d_num_selected_out) HIP_CHECK(g_allocator.DeviceFree(d_num_selected_out));
-    if (d_temp_storage) HIP_CHECK(g_allocator.DeviceFree(d_temp_storage));
-    if (d_in) HIP_CHECK(g_allocator.DeviceFree(d_in));
-    if (d_flags) HIP_CHECK(g_allocator.DeviceFree(d_flags));
+    if(h_in)
+        delete[] h_in;
+    if(h_reference)
+        delete[] h_reference;
+    if(d_out)
+        HIP_CHECK(g_allocator.DeviceFree(d_out));
+    if(d_num_selected_out)
+        HIP_CHECK(g_allocator.DeviceFree(d_num_selected_out));
+    if(d_temp_storage)
+        HIP_CHECK(g_allocator.DeviceFree(d_temp_storage));
+    if(d_in)
+        HIP_CHECK(g_allocator.DeviceFree(d_in));
+    if(d_flags)
+        HIP_CHECK(g_allocator.DeviceFree(d_flags));
 
     printf("\n\n");
 

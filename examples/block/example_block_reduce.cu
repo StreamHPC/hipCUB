@@ -167,7 +167,9 @@ void Test()
 
     // Kernel props
     int max_sm_occupancy;
-    HIP_CHECK(MaxSmOccupancy(max_sm_occupancy, BlockSumKernel<BLOCK_THREADS, ITEMS_PER_THREAD, ALGORITHM>, BLOCK_THREADS));
+    HIP_CHECK(MaxSmOccupancy(max_sm_occupancy,
+                             BlockSumKernel<BLOCK_THREADS, ITEMS_PER_THREAD, ALGORITHM>,
+                             BLOCK_THREADS));
 
     // Copy problem to device
     hipMemcpy(d_in, h_in, sizeof(int) * TILE_SIZE, hipMemcpyHostToDevice);

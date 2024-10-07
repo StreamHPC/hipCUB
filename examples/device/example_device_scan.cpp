@@ -158,11 +158,19 @@ int main(int argc, char** argv)
     // Allocate temporary storage
     void            *d_temp_storage = NULL;
     size_t          temp_storage_bytes = 0;
-    HIP_CHECK(hipcub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, d_in, d_out, num_items));
+    HIP_CHECK(hipcub::DeviceScan::ExclusiveSum(d_temp_storage,
+                                               temp_storage_bytes,
+                                               d_in,
+                                               d_out,
+                                               num_items));
     HIP_CHECK(g_allocator.DeviceAllocate(&d_temp_storage, temp_storage_bytes));
 
     // Run
-    HIP_CHECK(hipcub::DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, d_in, d_out, num_items));
+    HIP_CHECK(hipcub::DeviceScan::ExclusiveSum(d_temp_storage,
+                                               temp_storage_bytes,
+                                               d_in,
+                                               d_out,
+                                               num_items));
 
     // Check for correctness (and display results, if specified)
     int compare = CompareDeviceResults(h_reference, d_out, num_items, true, g_verbose);
@@ -170,11 +178,16 @@ int main(int argc, char** argv)
     AssertEquals(0, compare);
 
     // Cleanup
-    if (h_in) delete[] h_in;
-    if (h_reference) delete[] h_reference;
-    if (d_in) HIP_CHECK(g_allocator.DeviceFree(d_in));
-    if (d_out) HIP_CHECK(g_allocator.DeviceFree(d_out));
-    if (d_temp_storage) HIP_CHECK(g_allocator.DeviceFree(d_temp_storage));
+    if(h_in)
+        delete[] h_in;
+    if(h_reference)
+        delete[] h_reference;
+    if(d_in)
+        HIP_CHECK(g_allocator.DeviceFree(d_in));
+    if(d_out)
+        HIP_CHECK(g_allocator.DeviceFree(d_out));
+    if(d_temp_storage)
+        HIP_CHECK(g_allocator.DeviceFree(d_temp_storage));
 
     printf("\n\n");
 

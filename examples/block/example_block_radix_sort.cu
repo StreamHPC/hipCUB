@@ -187,9 +187,9 @@ void Test()
     Key *d_in       = NULL;
     Key *d_out      = NULL;
     clock_t *d_elapsed  = NULL;
-    HIP_CHECK(cudaMalloc((void**)&d_in,          sizeof(Key) * TILE_SIZE * g_grid_size));
-    HIP_CHECK(cudaMalloc((void**)&d_out,         sizeof(Key) * TILE_SIZE * g_grid_size));
-    HIP_CHECK(cudaMalloc((void**)&d_elapsed,     sizeof(clock_t) * g_grid_size));
+    HIP_CHECK(cudaMalloc((void**)&d_in, sizeof(Key) * TILE_SIZE * g_grid_size));
+    HIP_CHECK(cudaMalloc((void**)&d_out, sizeof(Key) * TILE_SIZE * g_grid_size));
+    HIP_CHECK(cudaMalloc((void**)&d_elapsed, sizeof(clock_t) * g_grid_size));
 
     // Display input problem data
     if (g_verbose)
@@ -202,7 +202,9 @@ void Test()
 
     // Kernel props
     int max_sm_occupancy;
-    HIP_CHECK(MaxSmOccupancy(max_sm_occupancy, BlockSortKernel<Key, BLOCK_THREADS, ITEMS_PER_THREAD>, BLOCK_THREADS));
+    HIP_CHECK(MaxSmOccupancy(max_sm_occupancy,
+                             BlockSortKernel<Key, BLOCK_THREADS, ITEMS_PER_THREAD>,
+                             BLOCK_THREADS));
 
     // Copy problem to device
     HIP_CHECK(hipMemcpy(d_in, h_in, sizeof(Key) * TILE_SIZE * g_grid_size, hipMemcpyHostToDevice));
@@ -247,7 +249,8 @@ void Test()
         elapsed_millis += timer.ElapsedMillis();
 
         // Copy clocks from device
-        HIP_CHECK(hipMemcpy(h_elapsed, d_elapsed, sizeof(clock_t) * g_grid_size, hipMemcpyDeviceToHost));
+        HIP_CHECK(
+            hipMemcpy(h_elapsed, d_elapsed, sizeof(clock_t) * g_grid_size, hipMemcpyDeviceToHost));
         for (int j = 0; j < g_grid_size; j++)
         {
             elapsed_clocks += h_elapsed[j];
@@ -273,9 +276,12 @@ void Test()
     if (h_in) delete[] h_in;
     if (h_reference) delete[] h_reference;
     if (h_elapsed) delete[] h_elapsed;
-    if (d_in) HIP_CHECK(cudaFree(d_in));
-    if (d_out) HIP_CHECK(cudaFree(d_out));
-    if (d_elapsed) HIP_CHECK(cudaFree(d_elapsed));
+    if(d_in)
+        HIP_CHECK(cudaFree(d_in));
+    if(d_out)
+        HIP_CHECK(cudaFree(d_out));
+    if(d_elapsed)
+        HIP_CHECK(cudaFree(d_elapsed));
 }
 
 
