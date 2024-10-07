@@ -12,6 +12,7 @@ Documentation for hipCUB is available at
 
 ### Changed
 * The NVIDIA backend now requires CUB, Thrust and libcu++ 2.5.0. If it is not found it will be downloaded from the NVIDIA CCCL repository.
+* Changed the C++ version from 14 to 17. C++14 will be deprecated in the next major release.
 
 ## (Unreleased) hipCUB-3.3.0 for ROCm 6.3.0
 
