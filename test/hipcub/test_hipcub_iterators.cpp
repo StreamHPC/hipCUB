@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright (c) 2017-2021 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2017-2024 Advanced Micro Devices, Inc. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -148,13 +148,15 @@ void iterator_test_function(IteratorType d_itr, std::vector<T> &h_reference)
     IteratorType *h_itrs = (IteratorType*)malloc(sizeof(IteratorType) * 2);
 
     T* device_output;
-    g_allocator.DeviceAllocate((void**)&device_output, output.size() * sizeof(typename decltype(output)::value_type));
+    HIP_CHECK(
+        g_allocator.DeviceAllocate((void**)&device_output,
+                                   output.size() * sizeof(typename decltype(output)::value_type)));
 
     // Run unguarded kernel
     Kernel<<<1, 1>>>(d_itr, device_output, d_itrs);
 
-    hipPeekAtLastError();
-    hipDeviceSynchronize();
+    HIP_CHECK(hipPeekAtLastError());
+    HIP_CHECK(hipDeviceSynchronize());
 
     HIP_CHECK(
             hipMemcpy(
@@ -181,7 +183,7 @@ void iterator_test_function(IteratorType d_itr, std::vector<T> &h_reference)
     ASSERT_TRUE(h_itr == h_itrs[0]);
     ASSERT_TRUE(d_itr == h_itrs[1]);
 
-    g_allocator.DeviceFree(device_output);
+    HIP_CHECK(g_allocator.DeviceFree(device_output));
 }
 
 TYPED_TEST_SUITE(HipcubIteratorTests, HipcubIteratorTestsParams);
@@ -215,14 +217,14 @@ TYPED_TEST(HipcubIteratorTests, TestCacheModifiedInput)
     h_reference[7] = h_data[0];          // Value at offset 0;
 
     T *d_data = NULL;
-    g_allocator.DeviceAllocate((void**)&d_data, sizeof(T) * TEST_VALUES);
+    HIP_CHECK(g_allocator.DeviceAllocate((void**)&d_data, sizeof(T) * TEST_VALUES));
 
     HIP_CHECK(hipMemcpy(d_data, h_data.data(), TEST_VALUES * sizeof(T), hipMemcpyHostToDevice));
 
     IteratorType d_itr((T*) d_data);
     iterator_test_function<IteratorType, T>(d_itr, h_reference);
 
-    g_allocator.DeviceFree(d_data);
+    HIP_CHECK(g_allocator.DeviceFree(d_data));
 }
 
 TYPED_TEST(HipcubIteratorTests, TestConstant)
@@ -305,7 +307,7 @@ TYPED_TEST(HipcubIteratorTests, TestTransform)
 
     // Allocate device arrays
     T *d_data = NULL;
-    g_allocator.DeviceAllocate((void**)&d_data, sizeof(T) * TEST_VALUES);
+    HIP_CHECK(g_allocator.DeviceAllocate((void**)&d_data, sizeof(T) * TEST_VALUES));
 
     HIP_CHECK(
         hipMemcpy(
@@ -333,7 +335,7 @@ TYPED_TEST(HipcubIteratorTests, TestTransform)
 
     iterator_test_function<IteratorType, T>(d_itr, h_reference);
 
-    g_allocator.DeviceFree(d_data);
+    HIP_CHECK(g_allocator.DeviceFree(d_data));
 }
 
 TYPED_TEST(HipcubIteratorTests, TestTexObj)
@@ -373,12 +375,15 @@ TYPED_TEST(HipcubIteratorTests, TestTexObj)
 
         // Allocate device arrays
         T *d_data   = NULL;
-        T *d_dummy  = NULL;
-        g_allocator.DeviceAllocate((void**)&d_data, sizeof(T) * TEST_VALUES);
-        hipMemcpy(d_data, h_data.data(), sizeof(T) * TEST_VALUES, hipMemcpyHostToDevice);
+        T* d_dummy  = NULL;
+        HIP_CHECK(g_allocator.DeviceAllocate((void**)&d_data, sizeof(T) * TEST_VALUES));
+        HIP_CHECK(hipMemcpy(d_data, h_data.data(), sizeof(T) * TEST_VALUES, hipMemcpyHostToDevice));
 
-        g_allocator.DeviceAllocate((void**)&d_dummy, sizeof(T) * DUMMY_TEST_VALUES);
-        hipMemcpy(d_dummy, h_data.data() + DUMMY_OFFSET, sizeof(T) * DUMMY_TEST_VALUES, hipMemcpyHostToDevice);
+        HIP_CHECK(g_allocator.DeviceAllocate((void**)&d_dummy, sizeof(T) * DUMMY_TEST_VALUES));
+        HIP_CHECK(hipMemcpy(d_dummy,
+                            h_data.data() + DUMMY_OFFSET,
+                            sizeof(T) * DUMMY_TEST_VALUES,
+                            hipMemcpyHostToDevice));
 
         // Initialize reference data
         constexpr uint32_t array_size = 8;
@@ -394,12 +399,12 @@ TYPED_TEST(HipcubIteratorTests, TestTexObj)
 
         // Create and bind obj-based test iterator
         IteratorType d_obj_itr;
-        d_obj_itr.BindTexture((CastT*) d_data, sizeof(T) * TEST_VALUES);
+        HIP_CHECK(d_obj_itr.BindTexture((CastT*) d_data, sizeof(T) * TEST_VALUES));
 
         iterator_test_function<IteratorType, T>(d_obj_itr, h_reference);
 
-        g_allocator.DeviceFree(d_data);
-        g_allocator.DeviceFree(d_dummy);
+        HIP_CHECK(g_allocator.DeviceFree(d_data));
+        HIP_CHECK(g_allocator.DeviceFree(d_dummy));
     }
 }
 
@@ -441,11 +446,11 @@ TYPED_TEST(HipcubIteratorTests, TestTexRef)
         // Allocate device arrays
         T *d_data   = NULL;
         T *d_dummy  = NULL;
-        g_allocator.DeviceAllocate((void**)&d_data, sizeof(T) * TEST_VALUES);
-        hipMemcpy(d_data, h_data.data(), sizeof(T) * TEST_VALUES, hipMemcpyHostToDevice);
+        HIP_CHECK(g_allocator.DeviceAllocate((void**)&d_data, sizeof(T) * TEST_VALUES));
+        HIP_CHECK(hipMemcpy(d_data, h_data.data(), sizeof(T) * TEST_VALUES, hipMemcpyHostToDevice));
 
-        g_allocator.DeviceAllocate((void**)&d_dummy, sizeof(T) * DUMMY_TEST_VALUES);
-        hipMemcpy(d_dummy, h_data.data() + DUMMY_OFFSET, sizeof(T) * DUMMY_TEST_VALUES, hipMemcpyHostToDevice);
+        HIP_CHECK(g_allocator.DeviceAllocate((void**)&d_dummy, sizeof(T) * DUMMY_TEST_VALUES));
+        HIP_CHECK(hipMemcpy(d_dummy, h_data.data() + DUMMY_OFFSET, sizeof(T) * DUMMY_TEST_VALUES, hipMemcpyHostToDevice));
 
         // Initialize reference data
         constexpr uint32_t array_size = 8;
@@ -461,16 +466,16 @@ TYPED_TEST(HipcubIteratorTests, TestTexRef)
 
         // Create and bind ref-based test iterator
         IteratorType d_ref_itr;
-        d_ref_itr.BindTexture((CastT*) d_data, sizeof(T) * TEST_VALUES);
+        HIP_CHECK(d_ref_itr.BindTexture((CastT*) d_data, sizeof(T) * TEST_VALUES));
 
         // Create and bind dummy iterator of same type to check with interference
         IteratorType d_ref_itr2;
-        d_ref_itr2.BindTexture((CastT*) d_dummy, sizeof(T) * DUMMY_TEST_VALUES);
+        HIP_CHECK(d_ref_itr2.BindTexture((CastT*) d_dummy, sizeof(T) * DUMMY_TEST_VALUES));
 
         iterator_test_function<IteratorType, T>(d_ref_itr, h_reference);
 
-        g_allocator.DeviceFree(d_data);
-        g_allocator.DeviceFree(d_dummy);
+        HIP_CHECK(g_allocator.DeviceFree(d_data));
+        HIP_CHECK(g_allocator.DeviceFree(d_dummy));
     }
 }
 
@@ -505,8 +510,8 @@ TYPED_TEST(HipcubIteratorTests, TestTexTransform)
 
         // Allocate device arrays
         T *d_data   = NULL;
-        g_allocator.DeviceAllocate((void**)&d_data, sizeof(T) * TEST_VALUES);
-        hipMemcpy(d_data, h_data.data(), sizeof(T) * TEST_VALUES, hipMemcpyHostToDevice);
+        HIP_CHECK(g_allocator.DeviceAllocate((void**)&d_data, sizeof(T) * TEST_VALUES));
+        HIP_CHECK(hipMemcpy(d_data, h_data.data(), sizeof(T) * TEST_VALUES, hipMemcpyHostToDevice));
 
         TransformOp<T> op;
 
@@ -524,7 +529,7 @@ TYPED_TEST(HipcubIteratorTests, TestTexTransform)
 
         // Create and bind ref-based test iterator
         TextureIteratorType d_tex_itr;
-        d_tex_itr.BindTexture((CastT*) d_data, sizeof(T) * TEST_VALUES);
+        HIP_CHECK(d_tex_itr.BindTexture((CastT*) d_data, sizeof(T) * TEST_VALUES));
 
         // Create transform iterator
         hipcub::TransformInputIterator<T, TransformOp<T>, TextureIteratorType> xform_itr(d_tex_itr, op);
@@ -534,6 +539,6 @@ TYPED_TEST(HipcubIteratorTests, TestTexTransform)
             T>
             (xform_itr, h_reference);
 
-        g_allocator.DeviceFree(d_data);
+        HIP_CHECK(g_allocator.DeviceFree(d_data));
     }
 }

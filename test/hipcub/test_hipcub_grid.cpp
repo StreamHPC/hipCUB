@@ -198,7 +198,7 @@ __global__ void KernelGridQueueInit(hipcub::GridQueue<OffsetT> tile_queue)
 {
     if ((threadIdx.x == 0) && (blockIdx.x == 0))
     {
-        tile_queue.ResetDrain();
+        (void) tile_queue.ResetDrain();
     }
 }
 

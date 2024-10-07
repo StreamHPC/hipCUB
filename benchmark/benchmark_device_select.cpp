@@ -113,11 +113,11 @@ void run_flagged_benchmark(benchmark::State& state,
     state.SetBytesProcessed(state.iterations() * batch_size * size * sizeof(T));
     state.SetItemsProcessed(state.iterations() * batch_size * size);
 
-    hipFree(d_input);
-    hipFree(d_flags);
-    hipFree(d_output);
-    hipFree(d_selected_count_output);
-    hipFree(d_temp_storage);
+    HIP_CHECK(hipFree(d_input));
+    HIP_CHECK(hipFree(d_flags));
+    HIP_CHECK(hipFree(d_output));
+    HIP_CHECK(hipFree(d_selected_count_output));
+    HIP_CHECK(hipFree(d_temp_storage));
     HIP_CHECK(hipDeviceSynchronize());
 }
 
@@ -211,10 +211,10 @@ void run_selectop_benchmark(benchmark::State& state,
     state.SetBytesProcessed(state.iterations() * batch_size * size * sizeof(T));
     state.SetItemsProcessed(state.iterations() * batch_size * size);
 
-    hipFree(d_input);
-    hipFree(d_output);
-    hipFree(d_selected_count_output);
-    hipFree(d_temp_storage);
+    HIP_CHECK(hipFree(d_input));
+    HIP_CHECK(hipFree(d_output));
+    HIP_CHECK(hipFree(d_selected_count_output));
+    HIP_CHECK(hipFree(d_temp_storage));
     HIP_CHECK(hipDeviceSynchronize());
 }
 
@@ -398,10 +398,10 @@ void run_unique_benchmark(benchmark::State& state,
     state.SetBytesProcessed(state.iterations() * batch_size * size * sizeof(T));
     state.SetItemsProcessed(state.iterations() * batch_size * size);
 
-    hipFree(d_input);
-    hipFree(d_output);
-    hipFree(d_selected_count_output);
-    hipFree(d_temp_storage);
+    HIP_CHECK(hipFree(d_input));
+    HIP_CHECK(hipFree(d_output));
+    HIP_CHECK(hipFree(d_selected_count_output));
+    HIP_CHECK(hipFree(d_temp_storage));
 }
 
 template<class KeyT, class ValueT>
@@ -511,12 +511,12 @@ void run_unique_by_key_benchmark(benchmark::State& state,
                             * (sizeof(KeyT) + sizeof(ValueT)));
     state.SetItemsProcessed(state.iterations() * batch_size * size);
 
-    hipFree(d_keys_input);
-    hipFree(d_values_input);
-    hipFree(d_keys_output);
-    hipFree(d_values_output);
-    hipFree(d_selected_count_output);
-    hipFree(d_temp_storage);
+    HIP_CHECK(hipFree(d_keys_input));
+    HIP_CHECK(hipFree(d_values_input));
+    HIP_CHECK(hipFree(d_keys_output));
+    HIP_CHECK(hipFree(d_values_output));
+    HIP_CHECK(hipFree(d_selected_count_output));
+    HIP_CHECK(hipFree(d_temp_storage));
 }
 
 #define CREATE_SELECT_FLAGGED_BENCHMARK(T, F, p)                                                   \
