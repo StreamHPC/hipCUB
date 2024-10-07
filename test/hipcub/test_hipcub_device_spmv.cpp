@@ -31,7 +31,7 @@
 hipcub::CachingDeviceAllocator g_allocator;
 
 static constexpr float alpha_const = 1.0f;
-static constexpr float beta_const = 0.0f;
+static constexpr float beta_const  = 0.0f;
 
 // Params for tests
 template<class Type,

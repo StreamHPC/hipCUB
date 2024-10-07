@@ -399,7 +399,7 @@ TYPED_TEST(HipcubIteratorTests, TestTexObj)
 
         // Create and bind obj-based test iterator
         IteratorType d_obj_itr;
-        HIP_CHECK(d_obj_itr.BindTexture((CastT*) d_data, sizeof(T) * TEST_VALUES));
+        HIP_CHECK(d_obj_itr.BindTexture((CastT*)d_data, sizeof(T) * TEST_VALUES));
 
         iterator_test_function<IteratorType, T>(d_obj_itr, h_reference);
 
@@ -450,7 +450,10 @@ TYPED_TEST(HipcubIteratorTests, TestTexRef)
         HIP_CHECK(hipMemcpy(d_data, h_data.data(), sizeof(T) * TEST_VALUES, hipMemcpyHostToDevice));
 
         HIP_CHECK(g_allocator.DeviceAllocate((void**)&d_dummy, sizeof(T) * DUMMY_TEST_VALUES));
-        HIP_CHECK(hipMemcpy(d_dummy, h_data.data() + DUMMY_OFFSET, sizeof(T) * DUMMY_TEST_VALUES, hipMemcpyHostToDevice));
+        HIP_CHECK(hipMemcpy(d_dummy,
+                            h_data.data() + DUMMY_OFFSET,
+                            sizeof(T) * DUMMY_TEST_VALUES,
+                            hipMemcpyHostToDevice));
 
         // Initialize reference data
         constexpr uint32_t array_size = 8;
@@ -466,11 +469,11 @@ TYPED_TEST(HipcubIteratorTests, TestTexRef)
 
         // Create and bind ref-based test iterator
         IteratorType d_ref_itr;
-        HIP_CHECK(d_ref_itr.BindTexture((CastT*) d_data, sizeof(T) * TEST_VALUES));
+        HIP_CHECK(d_ref_itr.BindTexture((CastT*)d_data, sizeof(T) * TEST_VALUES));
 
         // Create and bind dummy iterator of same type to check with interference
         IteratorType d_ref_itr2;
-        HIP_CHECK(d_ref_itr2.BindTexture((CastT*) d_dummy, sizeof(T) * DUMMY_TEST_VALUES));
+        HIP_CHECK(d_ref_itr2.BindTexture((CastT*)d_dummy, sizeof(T) * DUMMY_TEST_VALUES));
 
         iterator_test_function<IteratorType, T>(d_ref_itr, h_reference);
 
@@ -529,7 +532,7 @@ TYPED_TEST(HipcubIteratorTests, TestTexTransform)
 
         // Create and bind ref-based test iterator
         TextureIteratorType d_tex_itr;
-        HIP_CHECK(d_tex_itr.BindTexture((CastT*) d_data, sizeof(T) * TEST_VALUES));
+        HIP_CHECK(d_tex_itr.BindTexture((CastT*)d_data, sizeof(T) * TEST_VALUES));
 
         // Create transform iterator
         hipcub::TransformInputIterator<T, TransformOp<T>, TextureIteratorType> xform_itr(d_tex_itr, op);
