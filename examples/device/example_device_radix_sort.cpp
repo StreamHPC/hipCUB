@@ -148,7 +148,7 @@ int main(int argc, char** argv)
     }
 
     // Initialize device
-    HipcubDebug(args.DeviceInit());
+    HIP_CHECK(args.DeviceInit());
 
     printf("hipcub::DeviceRadixSort::SortPairs() %d items (%d-byte keys %d-byte values)\n",
         num_items, int(sizeof(float)), int(sizeof(int)));
@@ -166,24 +166,24 @@ int main(int argc, char** argv)
     // Allocate device arrays
     DoubleBuffer<float> d_keys;
     DoubleBuffer<int>   d_values;
-    HipcubDebug(g_allocator.DeviceAllocate((void**)&d_keys.d_buffers[0], sizeof(float) * num_items));
-    HipcubDebug(g_allocator.DeviceAllocate((void**)&d_keys.d_buffers[1], sizeof(float) * num_items));
-    HipcubDebug(g_allocator.DeviceAllocate((void**)&d_values.d_buffers[0], sizeof(int) * num_items));
-    HipcubDebug(g_allocator.DeviceAllocate((void**)&d_values.d_buffers[1], sizeof(int) * num_items));
+    HIP_CHECK(g_allocator.DeviceAllocate((void**)&d_keys.d_buffers[0], sizeof(float) * num_items));
+    HIP_CHECK(g_allocator.DeviceAllocate((void**)&d_keys.d_buffers[1], sizeof(float) * num_items));
+    HIP_CHECK(g_allocator.DeviceAllocate((void**)&d_values.d_buffers[0], sizeof(int) * num_items));
+    HIP_CHECK(g_allocator.DeviceAllocate((void**)&d_values.d_buffers[1], sizeof(int) * num_items));
 
     // Allocate temporary storage
     size_t  temp_storage_bytes  = 0;
     void    *d_temp_storage     = NULL;
 
-    HipcubDebug(hipcub::DeviceRadixSort::SortPairs(d_temp_storage, temp_storage_bytes, d_keys, d_values, num_items));
-    HipcubDebug(g_allocator.DeviceAllocate(&d_temp_storage, temp_storage_bytes));
+    HIP_CHECK(hipcub::DeviceRadixSort::SortPairs(d_temp_storage, temp_storage_bytes, d_keys, d_values, num_items));
+    HIP_CHECK(g_allocator.DeviceAllocate(&d_temp_storage, temp_storage_bytes));
 
     // Initialize device arrays
-    HipcubDebug(hipMemcpy(d_keys.d_buffers[d_keys.selector], h_keys, sizeof(float) * num_items, hipMemcpyHostToDevice));
-    HipcubDebug(hipMemcpy(d_values.d_buffers[d_values.selector], h_values, sizeof(int) * num_items, hipMemcpyHostToDevice));
+    HIP_CHECK(hipMemcpy(d_keys.d_buffers[d_keys.selector], h_keys, sizeof(float) * num_items, hipMemcpyHostToDevice));
+    HIP_CHECK(hipMemcpy(d_values.d_buffers[d_values.selector], h_values, sizeof(int) * num_items, hipMemcpyHostToDevice));
 
     // Run
-    HipcubDebug(hipcub::DeviceRadixSort::SortPairs(d_temp_storage, temp_storage_bytes, d_keys, d_values, num_items));
+    HIP_CHECK(hipcub::DeviceRadixSort::SortPairs(d_temp_storage, temp_storage_bytes, d_keys, d_values, num_items));
 
     // Check for correctness (and display results, if specified)
     int compare = CompareDeviceResults(h_reference_keys, d_keys.Current(), num_items, true, g_verbose);
@@ -199,11 +199,11 @@ int main(int argc, char** argv)
     if (h_values) delete[] h_values;
     if (h_reference_values) delete[] h_reference_values;
 
-    if (d_keys.d_buffers[0]) HipcubDebug(g_allocator.DeviceFree(d_keys.d_buffers[0]));
-    if (d_keys.d_buffers[1]) HipcubDebug(g_allocator.DeviceFree(d_keys.d_buffers[1]));
-    if (d_values.d_buffers[0]) HipcubDebug(g_allocator.DeviceFree(d_values.d_buffers[0]));
-    if (d_values.d_buffers[1]) HipcubDebug(g_allocator.DeviceFree(d_values.d_buffers[1]));
-    if (d_temp_storage) HipcubDebug(g_allocator.DeviceFree(d_temp_storage));
+    if (d_keys.d_buffers[0]) HIP_CHECK(g_allocator.DeviceFree(d_keys.d_buffers[0]));
+    if (d_keys.d_buffers[1]) HIP_CHECK(g_allocator.DeviceFree(d_keys.d_buffers[1]));
+    if (d_values.d_buffers[0]) HIP_CHECK(g_allocator.DeviceFree(d_values.d_buffers[0]));
+    if (d_values.d_buffers[1]) HIP_CHECK(g_allocator.DeviceFree(d_values.d_buffers[1]));
+    if (d_temp_storage) HIP_CHECK(g_allocator.DeviceFree(d_temp_storage));
 
     printf("\n\n");
 
