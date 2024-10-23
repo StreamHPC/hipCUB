@@ -122,8 +122,8 @@ public:
         return hipSuccess;
     }
 
-    HIPCUB_HOST hipError_t 
-    FillAndResetDrain(OffsetT fill_size, hipStream_t stream = 0)
+    HIPCUB_HOST 
+    hipError_t FillAndResetDrain(OffsetT fill_size, hipStream_t stream = 0)
     {
         hipError_t result = hipErrorUnknown;
         OffsetT counters[2];
@@ -142,11 +142,12 @@ public:
     {
         (void)stream;
         d_counters[DRAIN] = 0;
-        
+
         return hipSuccess;
     }
 
-    HIPCUB_HOST hipError_t ResetDrain(hipStream_t stream = 0)
+    HIPCUB_HOST 
+    hipError_t ResetDrain(hipStream_t stream = 0)
     {
         hipError_t result = hipErrorUnknown;
         result = HipcubDebug(hipMemsetAsync(d_counters + DRAIN, 0, sizeof(OffsetT), stream));
@@ -162,7 +163,7 @@ public:
         return hipSuccess;
     }
 
-    HIPCUB_HOST 
+    HIPCUB_HOST
     hipError_t ResetFill(hipStream_t stream = 0)
     {
         hipError_t result = hipErrorUnknown;
@@ -182,7 +183,7 @@ public:
         return hipSuccess;
     }
 
-    HIPCUB_HOST 
+    HIPCUB_HOST
     hipError_t FillSize(OffsetT &fill_size, hipStream_t stream = 0)
     {
         hipError_t result = hipErrorUnknown;
