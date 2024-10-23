@@ -41,7 +41,6 @@ BEGIN_HIPCUB_NAMESPACE
  * @{
  */
 
-
 /**
  * \brief GridQueue is a descriptor utility for dynamic queue management.
  *
@@ -71,23 +70,21 @@ BEGIN_HIPCUB_NAMESPACE
  *
  * \tparam OffsetT Signed integer type for global offsets
  */
-template <typename OffsetT>
+template<typename OffsetT>
 class GridQueue
 {
 private:
-
     /// Counter indices
     enum
     {
-        FILL    = 0,
-        DRAIN   = 1,
+        FILL  = 0,
+        DRAIN = 1,
     };
 
     /// Pair of counters
-    OffsetT *d_counters;
+    OffsetT* d_counters;
 
 public:
-
     /// Returns the device allocation size in bytes needed to construct a GridQueue instance
     __host__ __device__ __forceinline__
     static size_t AllocationSize()
@@ -95,42 +92,36 @@ public:
         return sizeof(OffsetT) * 2;
     }
 
-
     /// Constructs an invalid GridQueue descriptor
-    __host__ __device__ __forceinline__ GridQueue()
-    :
-        d_counters(NULL)
+    __host__ __device__ __forceinline__
+    GridQueue()
+        : d_counters(NULL)
     {}
-
 
     /// Constructs a GridQueue descriptor around the device storage allocation
-    __host__ __device__ __forceinline__ GridQueue(
-        void *d_storage) ///< Device allocation to back the GridQueue.  Must be at least as big as <tt>AllocationSize()</tt>.
-    :
-        d_counters((OffsetT*) d_storage)
+    __host__ __device__ __forceinline__
+    GridQueue(
+        void*
+            d_storage) ///< Device allocation to back the GridQueue.  Must be at least as big as <tt>AllocationSize()</tt>.
+        : d_counters((OffsetT*)d_storage)
     {}
 
-
     /// This operation sets the fill-size and resets the drain counter, preparing the GridQueue for draining in the next kernel instance.  To be called by the host or by a kernel prior to that which will be draining.
-    HIPCUB_DEVICE hipError_t FillAndResetDrain(
-        OffsetT fill_size,
-        hipStream_t stream = 0)
+    HIPCUB_DEVICE
+    hipError_t FillAndResetDrain(OffsetT fill_size, hipStream_t stream = 0)
     {
-        hipError_t result = hipErrorUnknown;
         (void)stream;
-        d_counters[FILL] = fill_size;
+        d_counters[FILL]  = fill_size;
         d_counters[DRAIN] = 0;
-        result = hipSuccess;
-        return result;
+        return hipSuccess;
     }
 
-    HIPCUB_HOST hipError_t FillAndResetDrain(
-        OffsetT fill_size,
-        hipStream_t stream = 0)
+    HIPCUB_HOST
+    hipError_t FillAndResetDrain(OffsetT fill_size, hipStream_t stream = 0)
     {
         hipError_t result = hipErrorUnknown;
-        OffsetT counters[2];
-        counters[FILL] = fill_size;
+        OffsetT    counters[2];
+        counters[FILL]  = fill_size;
         counters[DRAIN] = 0;
         result          = HipcubDebug(hipMemcpyAsync(d_counters,
                                             counters,
@@ -141,56 +132,50 @@ public:
     }
 
     /// This operation resets the drain so that it may advance to meet the existing fill-size.  To be called by the host or by a kernel prior to that which will be draining.
-    HIPCUB_DEVICE hipError_t ResetDrain(hipStream_t stream = 0)
+    HIPCUB_DEVICE
+    hipError_t ResetDrain(hipStream_t stream = 0)
     {
-        hipError_t result = hipErrorUnknown;
         (void)stream;
         d_counters[DRAIN] = 0;
-        result = hipSuccess;
-        return result;
+        return hipSuccess;
     }
 
-    HIPCUB_HOST hipError_t ResetDrain(hipStream_t stream = 0)
+    HIPCUB_HOST
+    hipError_t ResetDrain(hipStream_t stream = 0)
     {
         hipError_t result = hipErrorUnknown;
         result = HipcubDebug(hipMemsetAsync(d_counters + DRAIN, 0, sizeof(OffsetT), stream));
         return result;
     }
 
-
     /// This operation resets the fill counter.  To be called by the host or by a kernel prior to that which will be filling.
-    HIPCUB_DEVICE hipError_t ResetFill(hipStream_t stream = 0)
+    HIPCUB_DEVICE
+    hipError_t ResetFill(hipStream_t stream = 0)
     {
-        hipError_t result = hipErrorUnknown;
         (void)stream;
         d_counters[FILL] = 0;
-        result = hipSuccess;
-        return result;
+        return hipSuccess;
     }
 
-    HIPCUB_HOST hipError_t ResetFill(hipStream_t stream = 0)
+    HIPCUB_HOST
+    hipError_t ResetFill(hipStream_t stream = 0)
     {
         hipError_t result = hipErrorUnknown;
         result = HipcubDebug(hipMemsetAsync(d_counters + FILL, 0, sizeof(OffsetT), stream));
         return result;
     }
 
-
     /// Returns the fill-size established by the parent or by the previous kernel.
-    HIPCUB_DEVICE hipError_t FillSize(
-        OffsetT &fill_size,
-        hipStream_t stream = 0)
+    HIPCUB_DEVICE
+    hipError_t FillSize(OffsetT& fill_size, hipStream_t stream = 0)
     {
-        hipError_t result = hipErrorUnknown;
         (void)stream;
         fill_size = d_counters[FILL];
-        result = hipSuccess;
-        return result;
+        return hipSuccess;
     }
 
-    HIPCUB_HOST hipError_t FillSize(
-        OffsetT &fill_size,
-        hipStream_t stream = 0)
+    HIPCUB_HOST
+    hipError_t FillSize(OffsetT& fill_size, hipStream_t stream = 0)
     {
         hipError_t result = hipErrorUnknown;
         result            = HipcubDebug(hipMemcpyAsync(&fill_size,
@@ -201,42 +186,36 @@ public:
         return result;
     }
 
-
     /// Drain \p num_items from the queue.  Returns offset from which to read items.  To be called from hip kernel.
-    HIPCUB_DEVICE OffsetT Drain(OffsetT num_items)
+    HIPCUB_DEVICE
+    OffsetT Drain(OffsetT num_items)
     {
         return atomicAdd(d_counters + DRAIN, num_items);
     }
 
-
     /// Fill \p num_items into the queue.  Returns offset from which to write items.    To be called from hip kernel.
-    HIPCUB_DEVICE OffsetT Fill(OffsetT num_items)
+    HIPCUB_DEVICE
+    OffsetT Fill(OffsetT num_items)
     {
         return atomicAdd(d_counters + FILL, num_items);
     }
 };
 
-
-#ifndef DOXYGEN_SHOULD_SKIP_THIS    // Do not document
-
+#ifndef DOXYGEN_SHOULD_SKIP_THIS // Do not document
 
 /**
  * Reset grid queue (call with 1 block of 1 thread)
  */
-template <typename OffsetT>
-__global__ void FillAndResetDrainKernel(
-    GridQueue<OffsetT>   grid_queue,
-    OffsetT              num_items)
+template<typename OffsetT>
+__global__
+void FillAndResetDrainKernel(GridQueue<OffsetT> grid_queue, OffsetT num_items)
 {
     grid_queue.FillAndResetDrain(num_items);
 }
 
-
-
 #endif // DOXYGEN_SHOULD_SKIP_THIS
 
-
-/** @} */       // end group GridModule
+/** @} */ // end group GridModule
 
 END_HIPCUB_NAMESPACE
 
