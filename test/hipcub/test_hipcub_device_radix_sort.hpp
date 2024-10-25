@@ -43,7 +43,7 @@
         if(error == hipErrorOutOfMemory)                                                    \
         {                                                                                   \
             std::cout << "Out of memory. Skipping size = " << size << std::endl;            \
-            hipGetLastError(); /*reset error code to hipSuccess*/                           \
+            (void)hipGetLastError(); /*reset error code to hipSuccess*/                     \
             break;                                                                          \
         }                                                                                   \
         if(error != hipSuccess)                                                             \
