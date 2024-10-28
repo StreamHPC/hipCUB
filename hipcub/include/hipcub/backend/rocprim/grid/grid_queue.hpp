@@ -129,10 +129,10 @@ public:
         counters[FILL] = fill_size;
         counters[DRAIN] = 0;
         return HipcubDebug(hipMemcpyAsync(d_counters,
-                                            counters,
-                                            sizeof(OffsetT) * 2,
-                                            hipMemcpyHostToDevice,
-                                            stream));
+                                          counters,
+                                          sizeof(OffsetT) * 2,
+                                          hipMemcpyHostToDevice,
+                                          stream));
     }
 
     /// This operation resets the drain so that it may advance to meet the existing fill-size.  To be called by the host or by a kernel prior to that which will be draining.
@@ -181,10 +181,10 @@ public:
     hipError_t FillSize(OffsetT& fill_size, hipStream_t stream = 0)
     {
         return HipcubDebug(hipMemcpyAsync(&fill_size,
-                                            d_counters + FILL,
-                                            sizeof(OffsetT),
-                                            hipMemcpyDeviceToHost,
-                                            stream));
+                                          d_counters + FILL,
+                                          sizeof(OffsetT),
+                                          hipMemcpyDeviceToHost,
+                                          stream));
     }
 
 
