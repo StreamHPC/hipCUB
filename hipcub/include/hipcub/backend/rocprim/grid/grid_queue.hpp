@@ -125,16 +125,14 @@ public:
     HIPCUB_HOST
     hipError_t FillAndResetDrain(OffsetT fill_size, hipStream_t stream = 0)
     {
-        hipError_t result = hipErrorUnknown;
         OffsetT counters[2];
         counters[FILL] = fill_size;
         counters[DRAIN] = 0;
-        result          = HipcubDebug(hipMemcpyAsync(d_counters,
+        return HipcubDebug(hipMemcpyAsync(d_counters,
                                             counters,
                                             sizeof(OffsetT) * 2,
                                             hipMemcpyHostToDevice,
                                             stream));
-        return result;
     }
 
     /// This operation resets the drain so that it may advance to meet the existing fill-size.  To be called by the host or by a kernel prior to that which will be draining.
@@ -149,9 +147,7 @@ public:
     HIPCUB_HOST
     hipError_t ResetDrain(hipStream_t stream = 0)
     {
-        hipError_t result = hipErrorUnknown;
-        result = HipcubDebug(hipMemsetAsync(d_counters + DRAIN, 0, sizeof(OffsetT), stream));
-        return result;
+        return HipcubDebug(hipMemsetAsync(d_counters + DRAIN, 0, sizeof(OffsetT), stream));
     }
 
 
@@ -166,9 +162,7 @@ public:
     HIPCUB_HOST
     hipError_t ResetFill(hipStream_t stream = 0)
     {
-        hipError_t result = hipErrorUnknown;
-        result = HipcubDebug(hipMemsetAsync(d_counters + FILL, 0, sizeof(OffsetT), stream));
-        return result;
+        return HipcubDebug(hipMemsetAsync(d_counters + FILL, 0, sizeof(OffsetT), stream));
     }
 
 
@@ -186,13 +180,11 @@ public:
     HIPCUB_HOST
     hipError_t FillSize(OffsetT& fill_size, hipStream_t stream = 0)
     {
-        hipError_t result = hipErrorUnknown;
-        result            = HipcubDebug(hipMemcpyAsync(&fill_size,
+        return HipcubDebug(hipMemcpyAsync(&fill_size,
                                             d_counters + FILL,
                                             sizeof(OffsetT),
                                             hipMemcpyDeviceToHost,
                                             stream));
-        return result;
     }
 
 
