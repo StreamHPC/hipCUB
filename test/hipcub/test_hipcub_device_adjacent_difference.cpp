@@ -47,7 +47,7 @@ hipError_t dispatch_adjacent_difference(std::true_type /*left*/,
                                                                 std::forward<Args>(args)...);
 }
 
-template<class InputIteratorT, class OutputIteratorT, class... Args>
+template <typename InputIteratorT, typename OutputIteratorT, typename... Args>
 hipError_t dispatch_adjacent_difference(std::true_type /*left*/,
                                         std::false_type /*copy*/,
                                         void*          d_temp_storage,
@@ -62,7 +62,7 @@ hipError_t dispatch_adjacent_difference(std::true_type /*left*/,
                                                             std::forward<Args>(args)...);
 }
 
-template<class InputIteratorT, class OutputIteratorT, class... Args>
+template <typename InputIteratorT, typename OutputIteratorT, typename... Args>
 hipError_t dispatch_adjacent_difference(std::false_type /*left*/,
                                         std::true_type /*copy*/,
                                         void*           d_temp_storage,
@@ -78,7 +78,7 @@ hipError_t dispatch_adjacent_difference(std::false_type /*left*/,
                                                                  std::forward<Args>(args)...);
 }
 
-template<class InputIteratorT, class OutputIteratorT, class... Args>
+template <typename InputIteratorT, typename OutputIteratorT, typename... Args>
 hipError_t dispatch_adjacent_difference(std::false_type /*left*/,
                                         std::false_type /*copy*/,
                                         void*          d_temp_storage,
@@ -114,8 +114,8 @@ auto get_expected_result(const std::vector<T>& input,
     return result;
 }
 
-template<class InputT,
-         class OutputT  = InputT,
+template<typename InputT,
+         typename OutputT  = InputT,
          bool Left      = true,
          bool Copy      = true,
          bool UseGraphs = false>
@@ -128,9 +128,8 @@ struct params
     static constexpr bool use_graphs = UseGraphs;
 };
 
-template<class Params>
-class HipcubDeviceAdjacentDifference : public ::testing::Test
-{
+template<typename Params>
+class HipcubDeviceAdjacentDifference : public ::testing::Test {
 public:
     using params = Params;
 };
@@ -271,7 +270,7 @@ struct DeviceAdjacentDifferenceLargeParams
     static constexpr bool copy = Copy;
 };
 
-template<class Params>
+template<typename Params>
 class HipcubDeviceAdjacentDifferenceLargeTests : public ::testing::Test
 {
 public:
@@ -288,7 +287,7 @@ using HipcubDeviceAdjacentDifferenceLargeTestsParams
 TYPED_TEST_SUITE(HipcubDeviceAdjacentDifferenceLargeTests,
                  HipcubDeviceAdjacentDifferenceLargeTestsParams);
 
-template<class T>
+template<typename T>
 struct discard_write
 {
     T value;
@@ -305,14 +304,14 @@ struct discard_write
     }
 };
 
-template<class T, class InputIterator, class UnaryFunction>
-HIPCUB_HOST_DEVICE
-inline auto make_transform_iterator(InputIterator iterator, UnaryFunction transform)
+template<typename T, typename InputIterator, typename UnaryFunction>
+HIPCUB_HOST_DEVICE inline auto make_transform_iterator(InputIterator iterator,
+                                                       UnaryFunction transform)
 {
     return ::hipcub::TransformInputIterator<T, UnaryFunction, InputIterator>(iterator, transform);
 }
 
-template<class T>
+template<typename T>
 struct conversion_op : public std::unary_function<T, discard_write<T>>
 {
     HIPCUB_HOST_DEVICE
@@ -322,7 +321,7 @@ struct conversion_op : public std::unary_function<T, discard_write<T>>
     }
 };
 
-template<class T>
+template<typename T>
 struct flag_expected_op : public std::binary_function<T, T, discard_write<T>>
 {
     bool left;
