@@ -49,8 +49,6 @@ public:
             ::cub::TexRefInputIterator<T, UNIQUE_ID, OffsetT>::UnbindTexture());
     }
 
-    HIPCUB_HOST_DEVICE inline ~TexRefInputIterator() = default;
-
     HIPCUB_HOST_DEVICE inline TexRefInputIterator()
         : ::cub::TexRefInputIterator<T, UNIQUE_ID, OffsetT>()
     {}

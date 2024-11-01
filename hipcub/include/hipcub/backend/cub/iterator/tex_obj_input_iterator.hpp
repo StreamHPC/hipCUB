@@ -44,8 +44,6 @@ public:
         return hipCUDAErrorTohipError(::cub::TexObjInputIterator<T, OffsetT>::UnbindTexture());
     }
 
-    HIPCUB_HOST_DEVICE inline ~TexObjInputIterator() = default;
-
     HIPCUB_HOST_DEVICE inline TexObjInputIterator() : ::cub::TexObjInputIterator<T, OffsetT>() {}
 
     HIPCUB_HOST_DEVICE inline TexObjInputIterator(
