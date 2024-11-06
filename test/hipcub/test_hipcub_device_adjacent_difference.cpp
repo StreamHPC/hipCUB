@@ -39,7 +39,20 @@ hipError_t dispatch_adjacent_difference(std::true_type /*left*/,
                                         InputIteratorT  d_input,
                                         OutputIteratorT d_output,
                                         Args&&... args)
+template<class InputIteratorT, class OutputIteratorT, class... Args>
+hipError_t dispatch_adjacent_difference(std::true_type /*left*/,
+                                        std::true_type /*copy*/,
+                                        void*           d_temp_storage,
+                                        size_t&         temp_storage_bytes,
+                                        InputIteratorT  d_input,
+                                        OutputIteratorT d_output,
+                                        Args&&... args)
 {
+    return ::hipcub::DeviceAdjacentDifference::SubtractLeftCopy(d_temp_storage,
+                                                                temp_storage_bytes,
+                                                                d_input,
+                                                                d_output,
+                                                                std::forward<Args>(args)...);
     return ::hipcub::DeviceAdjacentDifference::SubtractLeftCopy(d_temp_storage,
                                                                 temp_storage_bytes,
                                                                 d_input,
@@ -47,7 +60,7 @@ hipError_t dispatch_adjacent_difference(std::true_type /*left*/,
                                                                 std::forward<Args>(args)...);
 }
 
-template <typename InputIteratorT, typename OutputIteratorT, typename... Args>
+template<class InputIteratorT, class OutputIteratorT, class... Args>
 hipError_t dispatch_adjacent_difference(std::true_type /*left*/,
                                         std::false_type /*copy*/,
                                         void*          d_temp_storage,
@@ -60,9 +73,13 @@ hipError_t dispatch_adjacent_difference(std::true_type /*left*/,
                                                             temp_storage_bytes,
                                                             d_input,
                                                             std::forward<Args>(args)...);
+    return ::hipcub::DeviceAdjacentDifference::SubtractLeft(d_temp_storage,
+                                                            temp_storage_bytes,
+                                                            d_input,
+                                                            std::forward<Args>(args)...);
 }
 
-template <typename InputIteratorT, typename OutputIteratorT, typename... Args>
+template<class InputIteratorT, class OutputIteratorT, class... Args>
 hipError_t dispatch_adjacent_difference(std::false_type /*left*/,
                                         std::true_type /*copy*/,
                                         void*           d_temp_storage,
@@ -76,9 +93,14 @@ hipError_t dispatch_adjacent_difference(std::false_type /*left*/,
                                                                  d_input,
                                                                  d_output,
                                                                  std::forward<Args>(args)...);
+    return ::hipcub::DeviceAdjacentDifference::SubtractRightCopy(d_temp_storage,
+                                                                 temp_storage_bytes,
+                                                                 d_input,
+                                                                 d_output,
+                                                                 std::forward<Args>(args)...);
 }
 
-template <typename InputIteratorT, typename OutputIteratorT, typename... Args>
+template<class InputIteratorT, class OutputIteratorT, class... Args>
 hipError_t dispatch_adjacent_difference(std::false_type /*left*/,
                                         std::false_type /*copy*/,
                                         void*          d_temp_storage,
@@ -91,8 +113,13 @@ hipError_t dispatch_adjacent_difference(std::false_type /*left*/,
                                                              temp_storage_bytes,
                                                              d_input,
                                                              std::forward<Args>(args)...);
+    return ::hipcub::DeviceAdjacentDifference::SubtractRight(d_temp_storage,
+                                                             temp_storage_bytes,
+                                                             d_input,
+                                                             std::forward<Args>(args)...);
 }
 
+template<typename Output, typename T, typename BinaryFunction>
 template<typename Output, typename T, typename BinaryFunction>
 auto get_expected_result(const std::vector<T>& input,
                          const BinaryFunction  op,
@@ -104,6 +131,7 @@ auto get_expected_result(const std::vector<T>& input,
 }
 
 template<typename Output, typename T, typename BinaryFunction>
+template<typename Output, typename T, typename BinaryFunction>
 auto get_expected_result(const std::vector<T>& input,
                          const BinaryFunction  op,
                          std::false_type /*left*/)
@@ -114,16 +142,18 @@ auto get_expected_result(const std::vector<T>& input,
     return result;
 }
 
-// Params for tests
-template<class InputType,
-         class OutputType                = InputType,
-         bool        Left                = true,
-         api_variant Aliasing            = api_variant::no_alias,
-         bool        UseIdentityIterator = false,
-         bool UseGraphs                  = false,
-         bool UseIndirectIterator        = false>
-struct DeviceAdjacentDifferenceParams
+template<class InputT,
+         class OutputT  = InputT,
+         bool Left      = true,
+         bool Copy      = true,
+         bool UseGraphs = false>
+struct params
 {
+    using input_type                 = InputT;
+    using output_type                = OutputT;
+    static constexpr bool left       = Left;
+    static constexpr bool copy       = Copy;
+    static constexpr bool use_graphs = UseGraphs;
     using input_type                 = InputT;
     using output_type                = OutputT;
     static constexpr bool left       = Left;
@@ -131,96 +161,29 @@ struct DeviceAdjacentDifferenceParams
     static constexpr bool use_graphs = UseGraphs;
 };
 
-template <class Params>
-class HipcubDeviceAdjacentDifferenceTests : public ::testing::Test
+template<class Params>
+class HipcubDeviceAdjacentDifference : public ::testing::Test
 {
 public:
-    using input_type                                   = typename Params::input_type;
-    using output_type                                  = typename Params::output_type;
-    static constexpr bool        left                  = Params::left;
-    static constexpr api_variant aliasing              = Params::aliasing;
-    static constexpr bool        use_identity_iterator = Params::use_identity_iterator;
-    static constexpr bool        use_indirect_iterator = Params::use_indirect_iterator;
-    static constexpr bool        debug_synchronous     = false;
-    static constexpr bool use_graphs                   = Params::use_graphs;
+    using params = Params;
 };
 
-using custom_double2     = test_utils::custom_test_type<double>;
-using custom_config_0 = rocprim::adjacent_difference_config<128, 4>;
+typedef ::testing::Types<params<int>,
+                         params<int, double>,
+                         params<int8_t, int8_t, true, false>,
+                         params<float, float, false, true>,
+                         params<double, double, true, true>,
+                         params<test_utils::half, test_utils::half>,
+                         params<test_utils::bfloat16, test_utils::bfloat16>,
+                         params<int, int, true, true, true>>
+    Params;
 
-template<int SizeLimit>
-using custom_size_limit_config
-    = rocprim::adjacent_difference_config<1024,
-                                          2,
-                                          rocprim::block_load_method::block_load_transpose,
-                                          rocprim::block_store_method::block_store_transpose,
-                                          SizeLimit>;
+TYPED_TEST_SUITE(HipcubDeviceAdjacentDifference, Params);
 
-using HipcubDeviceAdjacentDifferenceTestsParams = ::testing::Types<
-    // Tests with default configuration
-    DeviceAdjacentDifferenceParams<int>,
-    DeviceAdjacentDifferenceParams<double>,
-    DeviceAdjacentDifferenceParams<float>,
-    DeviceAdjacentDifferenceParams<rocprim::bfloat16>,
-    DeviceAdjacentDifferenceParams<float, double, false>,
-    DeviceAdjacentDifferenceParams<int8_t, int8_t, true, api_variant::in_place>,
-    DeviceAdjacentDifferenceParams<custom_double2, custom_double2, false, api_variant::in_place>,
-    DeviceAdjacentDifferenceParams<rocprim::bfloat16, float, true, api_variant::no_alias>,
-    DeviceAdjacentDifferenceParams<rocprim::half, rocprim::half, true, api_variant::alias, false>,
-    DeviceAdjacentDifferenceParams<rocprim::half,
-                                   rocprim::half,
-                                   true,
-                                   api_variant::in_place,
-                                   false>,
-    // Tests for void value_type
-    DeviceAdjacentDifferenceParams<float, float, true, api_variant::in_place, true>,
-    DeviceAdjacentDifferenceParams<float, float, true, api_variant::no_alias, true>,
-    DeviceAdjacentDifferenceParams<float, float, true, api_variant::alias, true>,
-    // Tests for supported config structs
-    DeviceAdjacentDifferenceParams<rocprim::bfloat16,
-                                   float,
-                                   true,
-                                   api_variant::no_alias,
-                                   false,
-                                   custom_config_0>,
-    DeviceAdjacentDifferenceParams<rocprim::bfloat16, float, true, api_variant::alias>,
-    // Tests for different size_limits
-    DeviceAdjacentDifferenceParams<int,
-                                   int,
-                                   true,
-                                   api_variant::no_alias,
-                                   false,
-                                   custom_size_limit_config<64>>,
-    DeviceAdjacentDifferenceParams<int,
-                                   int,
-                                   true,
-                                   api_variant::no_alias,
-                                   false,
-                                   custom_size_limit_config<8192>,
-                                   false,
-                                   true>,
-    DeviceAdjacentDifferenceParams<int,
-                                   int,
-                                   true,
-                                   api_variant::no_alias,
-                                   false,
-                                   custom_size_limit_config<10240>,
-                                   false,
-                                   true>,
-    DeviceAdjacentDifferenceParams<int,
-                                   int,
-                                   true,
-                                   api_variant::no_alias,
-                                   false,
-                                   rocprim::default_config,
-                                   true>>;
-
-TYPED_TEST_SUITE(HipcubDeviceAdjacentDifferenceTests, HipcubDeviceAdjacentDifferenceTestsParams);
-
-TYPED_TEST(HipcubDeviceAdjacentDifferenceTests, AdjacentDifference)
+TYPED_TEST(HipcubDeviceAdjacentDifference, SubtractLeftCopy)
 {
     int device_id = test_common_utils::obtain_device_from_ctest();
-    SCOPED_TRACE(testing::Message() << "with device_id = " << device_id);
+    SCOPED_TRACE(testing::Message() << "with device_id= " << device_id);
     HIP_CHECK(hipSetDevice(device_id));
 
     using input_type = typename TestFixture::params::input_type;
@@ -238,11 +201,28 @@ TYPED_TEST(HipcubDeviceAdjacentDifferenceTests, AdjacentDifference)
     }
 
     for(size_t seed_index = 0; seed_index < random_seeds_count + seed_size; seed_index++)
+    using input_type = typename TestFixture::params::input_type;
+    static constexpr std::integral_constant<bool, TestFixture::params::left> left_constant{};
+    static constexpr std::integral_constant<bool, TestFixture::params::copy> copy_constant{};
+    using output_type
+        = std::conditional_t<copy_constant, input_type, typename TestFixture::params::output_type>;
+    static constexpr ::hipcub::Difference op;
+
+    hipStream_t stream = 0;
+    if(TestFixture::params::use_graphs)
+    {
+        // Default stream does not support hipGraph stream capture, so create one
+        HIP_CHECK(hipStreamCreateWithFlags(&stream, hipStreamNonBlocking));
+    }
+
+    for(size_t seed_index = 0; seed_index < random_seeds_count + seed_size; seed_index++)
     {
         unsigned int seed_value
+        unsigned int seed_value
             = seed_index < random_seeds_count ? rand() : seeds[seed_index - random_seeds_count];
-        SCOPED_TRACE(testing::Message() << "with seed = " << seed_value);
+        SCOPED_TRACE(testing::Message() << "with seed= " << seed_value);
 
+        for(size_t size : test_utils::get_sizes(seed_value))
         for(size_t size : test_utils::get_sizes(seed_value))
         {
             SCOPED_TRACE(testing::Message() << "with size= " << size);
@@ -261,9 +241,38 @@ TYPED_TEST(HipcubDeviceAdjacentDifferenceTests, AdjacentDifference)
                 HIP_CHECK(
                     test_common_utils::hipMallocHelper(&d_output, size * sizeof(d_output[0])));
             }
+            SCOPED_TRACE(testing::Message() << "with size= " << size);
+
+            const auto input = test_utils::get_random_data<input_type>(
+                size,
+                test_utils::convert_to_device<input_type>(-50),
+                test_utils::convert_to_device<input_type>(50),
+                seed_value);
+
+            input_type*  d_input{};
+            output_type* d_output{};
+            HIP_CHECK(test_common_utils::hipMallocHelper(&d_input, size * sizeof(d_input[0])));
+            if(copy_constant)
+            {
+                HIP_CHECK(
+                    test_common_utils::hipMallocHelper(&d_output, size * sizeof(d_output[0])));
+            }
             HIP_CHECK(
                 hipMemcpy(d_input, input.data(), size * sizeof(input_type), hipMemcpyHostToDevice));
+                hipMemcpy(d_input, input.data(), size * sizeof(input_type), hipMemcpyHostToDevice));
 
+            const auto expected = get_expected_result<output_type>(input, op, left_constant);
+
+            size_t temporary_storage_bytes = 0;
+            HIP_CHECK(dispatch_adjacent_difference(left_constant,
+                                                   copy_constant,
+                                                   nullptr,
+                                                   temporary_storage_bytes,
+                                                   d_input,
+                                                   d_output,
+                                                   size,
+                                                   op,
+                                                   stream));
             const auto expected = get_expected_result<output_type>(input, op, left_constant);
 
             size_t temporary_storage_bytes = 0;
@@ -283,38 +292,33 @@ TYPED_TEST(HipcubDeviceAdjacentDifferenceTests, AdjacentDifference)
             HIP_CHECK(
                 test_common_utils::hipMallocHelper(&d_temporary_storage, temporary_storage_bytes));
 
-            hipGraph_t     graph;
-            hipGraphExec_t graph_instance;
-
-            // We might call the API multiple times, with almost the same parameter
-            // (in-place and out-of-place)
-            // we should be able to use the same amount of temp storage for and get the same
-            // results (maybe with different types) for both.
-            auto run_and_verify = [&](const auto output_it, auto* d_output)
+            hipGraph_t graph;
+            if(TestFixture::params::use_graphs)
             {
-                if(TestFixture::use_graphs)
-                {
-                    graph = test_utils::createGraphHelper(stream);
-                }
+                graph = test_utils::createGraphHelper(stream);
+            }
 
-                // Run
-                HIP_CHECK(dispatch_adjacent_difference<Config>(left_tag,
-                                                               alias_tag,
-                                                               d_temp_storage,
-                                                               temp_storage_size,
-                                                               input_it,
-                                                               output_it,
-                                                               size,
-                                                               rocprim::minus<>{},
-                                                               stream,
-                                                               debug_synchronous));
-                HIP_CHECK(hipGetLastError());
+            HIP_CHECK(dispatch_adjacent_difference(left_constant,
+                                                   copy_constant,
+                                                   d_temporary_storage,
+                                                   temporary_storage_bytes,
+                                                   d_input,
+                                                   d_output,
+                                                   size,
+                                                   op,
+                                                   stream));
 
-                if(TestFixture::use_graphs)
-                {
-                    graph_instance = test_utils::endCaptureGraphHelper(graph, stream, true, true);
-                }
+            hipGraphExec_t graph_instance;
+            if(TestFixture::params::use_graphs)
+            {
+                graph_instance = test_utils::endCaptureGraphHelper(graph, stream, true, true);
+            }
 
+            std::vector<output_type> output(size);
+            HIP_CHECK(hipMemcpy(output.data(),
+                                copy_constant ? d_output : d_input,
+                                size * sizeof(output[0]),
+                                hipMemcpyDeviceToHost));
             std::vector<output_type> output(size);
             HIP_CHECK(hipMemcpy(output.data(),
                                 copy_constant ? d_output : d_input,
@@ -325,36 +329,37 @@ TYPED_TEST(HipcubDeviceAdjacentDifferenceTests, AdjacentDifference)
             HIP_CHECK(hipFree(d_input));
             if(copy_constant)
             {
+            HIP_CHECK(hipFree(d_temporary_storage));
+            HIP_CHECK(hipFree(d_input));
+            if(copy_constant)
+            {
                 HIP_CHECK(hipFree(d_output));
             }
 
-            // if api_variant is not no_alias we should check the inplace function call
-            if(aliasing != api_variant::no_alias)
-            {
-                ASSERT_NO_FATAL_FAILURE(run_and_verify(input_it, d_input));
-            }
+            ASSERT_NO_FATAL_FAILURE(test_utils::assert_bit_eq(output, expected));
 
-            if(TestFixture::use_graphs)
+            if(TestFixture::params::use_graphs)
             {
-                HIP_CHECK(hipStreamDestroy(stream));
+                test_utils::cleanupGraphHelper(graph, graph_instance);
             }
-
-            HIP_CHECK(hipFree(d_temp_storage));
-            HIP_CHECK(hipFree(d_input));
         }
+    }
+
+    if(TestFixture::params::use_graphs)
+    {
+        HIP_CHECK(hipStreamDestroy(stream));
     }
 }
 
 // Params for tests
-template<bool Left = true, api_variant Aliasing = api_variant::no_alias, bool UseGraphs = false>
+template<bool Left = true, bool Copy = false>
 struct DeviceAdjacentDifferenceLargeParams
 {
-    static constexpr bool        left       = Left;
-    static constexpr api_variant aliasing   = Aliasing;
-    static constexpr bool        use_graphs = UseGraphs;
+    static constexpr bool left = Left;
+    static constexpr bool copy = Copy;
 };
 
-template <class Params>
+template<class Params>
 class HipcubDeviceAdjacentDifferenceLargeTests : public ::testing::Test
 {
 public:
@@ -380,6 +385,7 @@ private:
         {
             if(value != current_index_)
             {
+                //flagflag
                 rocprim::detail::atomic_store(incorrect_flag_, 1);
             }
             if(current_index_ % SamplingRate == 0)
@@ -480,46 +486,117 @@ private:
 };
 
 using HipcubDeviceAdjacentDifferenceLargeTestsParams
-    = ::testing::Types<DeviceAdjacentDifferenceLargeParams<true, api_variant::no_alias>,
-                       DeviceAdjacentDifferenceLargeParams<false, api_variant::no_alias>,
-                       DeviceAdjacentDifferenceLargeParams<false, api_variant::alias>,
-                       DeviceAdjacentDifferenceLargeParams<true, api_variant::no_alias, true>>;
+    = ::testing::Types<DeviceAdjacentDifferenceLargeParams<true, false>,
+                       DeviceAdjacentDifferenceLargeParams<true, true>,
+                       DeviceAdjacentDifferenceLargeParams<false, false>,
+                       DeviceAdjacentDifferenceLargeParams<false, true>>;
 
 TYPED_TEST_SUITE(HipcubDeviceAdjacentDifferenceLargeTests,
                  HipcubDeviceAdjacentDifferenceLargeTestsParams);
 
-TYPED_TEST(HipcubDeviceAdjacentDifferenceLargeTests, LargeIndices)
+template<class T>
+struct discard_write
 {
-    if (TestFixture::use_graphs)
-        GTEST_SKIP() << "Temporarily skipping test within hipGraphs. Will re-enable when issues with atomics inside graphs are resolved.";
+    T value;
 
+    __device__ operator T() const
+    {
+        return value;
+    }
+    __device__
+    discard_write&
+        operator=(T)
+    {
+        return *this;
+    }
+};
+
+template<class T, class InputIterator, class UnaryFunction>
+HIPCUB_HOST_DEVICE
+inline auto make_transform_iterator(InputIterator iterator, UnaryFunction transform)
+{
+    return ::hipcub::TransformInputIterator<T, UnaryFunction, InputIterator>(iterator, transform);
+}
+
+template<class T>
+struct conversion_op : public std::unary_function<T, discard_write<T>>
+{
+    HIPCUB_HOST_DEVICE
+    auto operator()(const T i) const
+    {
+        return discard_write<T>{i};
+    }
+};
+
+template<class T>
+struct flag_expected_op : public std::binary_function<T, T, discard_write<T>>
+{
+    bool left;
+    T    expected;
+    T    expected_above_limit;
+    int* d_flags;
+    flag_expected_op(bool left, T expected, T expected_above_limit, int* d_flags)
+        : left(left)
+        , expected(expected)
+        , expected_above_limit(expected_above_limit)
+        , d_flags(d_flags)
+    {}
+
+    HIPCUB_HOST_DEVICE
+    T operator()(const discard_write<T>& minuend, const discard_write<T>& subtrahend)
+    {
+        if(left)
+        {
+            if(minuend == expected && subtrahend == expected - 1)
+            {
+                d_flags[0] = 1;
+            }
+            if(minuend == expected_above_limit && subtrahend == expected_above_limit - 1)
+            {
+                d_flags[1] = 1;
+            }
+        }
+        else
+        {
+            if(minuend == expected && subtrahend == expected + 1)
+            {
+                d_flags[0] = 1;
+            }
+            if(minuend == expected_above_limit && subtrahend == expected_above_limit + 1)
+            {
+                d_flags[1] = 1;
+            }
+        }
+        return 0;
+    }
+};
+
+TYPED_TEST(HipcubDeviceAdjacentDifferenceLargeTests, LargeIndicesAndOpOnce)
+{
     const int device_id = test_common_utils::obtain_device_from_ctest();
-
-    SCOPED_TRACE(testing::Message() << "with device_id = " << device_id);
+    SCOPED_TRACE(testing::Message() << "with device_id= " << device_id);
     HIP_CHECK(hipSetDevice(device_id));
 
     using T                    = size_t;
-    using OutputIterator       = hipcub::DiscardOutputIterator<>;
     static constexpr bool left = TestFixture::left;
     static constexpr bool copy = TestFixture::copy;
+    static constexpr unsigned int sampling_rate     = 10000;
+    using OutputIterator                            = check_output_iterator<sampling_rate>;
+    using flag_type                                 = OutputIterator::flag_type;
 
-    SCOPED_TRACE(testing::Message()
-                 << "is_left = " << is_left << ", api_variant = " << to_string(aliasing));
+    SCOPED_TRACE(testing::Message() << "left = " << left << ", copy = " << copy);
 
-    hipStream_t stream = 0; // default
-    if (TestFixture::use_graphs)
-    {
-        // Default stream does not support hipGraph stream capture, so create one
-        HIP_CHECK(hipStreamCreateWithFlags(&stream, hipStreamNonBlocking));
-    }
+    static constexpr hipStream_t stream = 0; // default
 
     for(std::size_t seed_index = 0; seed_index < random_seeds_count + seed_size; seed_index++)
     {
         unsigned int seed_value
             = seed_index < random_seeds_count ? rand() : seeds[seed_index - random_seeds_count];
-        SCOPED_TRACE(testing::Message() << "with seed = " << seed_value);
+        SCOPED_TRACE(testing::Message() << "with seed= " << seed_value);
 
-        for(const auto size : test_utils::get_large_sizes(seed_value))
+        const std::vector<size_t> sizes = test_utils::get_large_sizes(seed_value);
+
+        for(const auto size : sizes)
         {
             SCOPED_TRACE(testing::Message() << "with size = " << size);
 
@@ -530,68 +607,52 @@ TYPED_TEST(HipcubDeviceAdjacentDifferenceLargeTests, LargeIndices)
             HIP_CHECK(test_common_utils::hipMallocHelper(&d_counter, sizeof(*d_counter)));
             HIP_CHECK(hipMemset(d_incorrect_flag, 0, sizeof(*d_incorrect_flag)));
             HIP_CHECK(hipMemset(d_counter, 0, sizeof(*d_counter)));
-            // Note: hipMemset runs asynchronously unless the pointer it's passed refers to pinned memory.
-            // Wait for it to complete here before we use the device variables we just set.
-            HIP_CHECK(hipDeviceSynchronize());
 
             OutputIterator output(d_incorrect_flag, d_counter);
 
-            const auto input = rocprim::make_counting_iterator(T{0});
+            const auto input = hipcub::CountingInputIterator<T>(T{0});
 
             // Return the position where the adjacent difference is expected to be written out.
             // When called with consecutive values the left value is returned at the left-handed difference, and the right value otherwise.
             // The return value is coherent with the boundary values.
             const auto op = [](const auto& larger_value, const auto& smaller_value)
-            { return (smaller_value + larger_value) / 2 + (is_left ? 1 : 0); };
+            { return (smaller_value + larger_value) / 2 + (left ? 1 : 0); };
 
-            static constexpr auto left_tag     = rocprim::detail::bool_constant<is_left>{};
-            static constexpr auto aliasing_tag = std::integral_constant<api_variant, aliasing>{};
+            static constexpr auto left_tag = std::integral_constant<bool, left>{};
+
+            static constexpr auto copy_tag = std::integral_constant<bool, copy>{};
 
             // Allocate temporary storage
-            std::size_t temp_storage_size;
-            void*       d_temp_storage = nullptr;
+            std::size_t temp_storage_size = 0;
+            void*       d_temp_storage    = nullptr;
             HIP_CHECK(dispatch_adjacent_difference(left_tag,
-                                                   aliasing_tag,
+                                                   copy_tag,
                                                    d_temp_storage,
                                                    temp_storage_size,
                                                    input,
                                                    output,
                                                    size,
                                                    op,
-                                                   stream,
-                                                   debug_synchronous));
+                                                   stream));
 
-            ASSERT_GT(temp_storage_size, 0);
-
+#ifdef __HIP_PLATFORM_AMD__
+            ASSERT_GT(temp_storage_size, 0U);
+#endif
             HIP_CHECK(test_common_utils::hipMallocHelper(&d_temp_storage, temp_storage_size));
 
-            hipGraph_t graph;
-            if(TestFixture::use_graphs)
-            {
-                graph = test_utils::createGraphHelper(stream);
-            }
-
-            // Capture the memset in the graph so that relaunching will have expected result
             HIP_CHECK(hipMemsetAsync(d_incorrect_flag, 0, sizeof(*d_incorrect_flag), stream));
             HIP_CHECK(hipMemsetAsync(d_counter, 0, sizeof(*d_counter), stream));
 
             // Run
             HIP_CHECK(dispatch_adjacent_difference(left_tag,
-                                                   aliasing_tag,
+                                                   copy_tag,
                                                    d_temp_storage,
                                                    temp_storage_size,
                                                    input,
                                                    output,
                                                    size,
                                                    op,
-                                                   stream,
-                                                   debug_synchronous));
-
-            hipGraphExec_t graph_instance;
-            if(TestFixture::use_graphs)
-            {
-                graph_instance = test_utils::endCaptureGraphHelper(graph, stream, true, true);
-            }
+                                                   stream));
 
             // Copy output to host
             flag_type incorrect_flag;
@@ -605,7 +666,8 @@ TYPED_TEST(HipcubDeviceAdjacentDifferenceLargeTests, LargeIndices)
             ASSERT_EQ(flags[0], 1);
             ASSERT_EQ(flags[1], 1);
             HIP_CHECK(hipFree(d_temp_storage));
-            HIP_CHECK(hipFree(d_flags));
+            HIP_CHECK(hipFree(d_incorrect_flag));
+            HIP_CHECK(hipFree(d_counter));
         }
     }
 }
