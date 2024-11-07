@@ -357,7 +357,6 @@ TYPED_TEST(HipcubDeviceSelectTests, SelectOp)
     }
 
     TestSelectOp select_op;
-
     for(size_t seed_index = 0; seed_index < random_seeds_count + seed_size; seed_index++)
     {
         unsigned int seed_value

@@ -381,7 +381,9 @@ private:
             : current_index_(current_index), incorrect_flag_(incorrect_flag), counter_(counter)
         {}
 
-        __device__ check_output& operator=(size_t value)
+        __device__
+        check_output&
+            operator=(size_t value)
         {
             if(value != current_index_)
             {
@@ -408,24 +410,30 @@ public:
     using iterator_category = std::random_access_iterator_tag;
     using difference_type   = std::ptrdiff_t;
 
-    __host__ __device__ check_output_iterator(flag_type* const incorrect_flag,
-                                              size_t* const    counter)
+    __host__ __device__
+    check_output_iterator(flag_type* const incorrect_flag, size_t* const    counter)
         : current_index_(0), incorrect_flag_(incorrect_flag), counter_(counter)
     {}
 
-    __device__ bool operator==(const check_output_iterator& rhs) const
+    __device__
+    bool operator==(const check_output_iterator& rhs) const
     {
         return current_index_ == rhs.current_index_;
     }
-    __device__ bool operator!=(const check_output_iterator& rhs) const
+    __device__
+    bool operator!=(const check_output_iterator& rhs) const
     {
         return !(*this == rhs);
     }
-    __device__ reference operator*()
+    __device__
+    reference
+        operator*()
     {
         return reference(incorrect_flag_, current_index_, counter_);
     }
-    __device__ reference operator[](const difference_type distance) const
+    __device__
+    reference
+        operator[](const difference_type distance) const
     {
         return *(*this + distance);
     }
@@ -474,7 +482,9 @@ struct flag_expected_op : public std::binary_function<T, T, discard_write<T>>
     {
         return ++check_output_iterator{*this};
     }
-    __host__ __device__ check_output_iterator operator--(int)
+    __host__ __device__
+    check_output_iterator
+        operator--(int)
     {
         return --check_output_iterator{*this};
     }
