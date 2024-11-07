@@ -387,8 +387,7 @@ private:
         {
             if(value != current_index_)
             {
-                //flagflag
-                rocprim::detail::atomic_store(incorrect_flag_, 1);
+                atomicExch(incorrect_flag_, 1);
             }
             if(current_index_ % SamplingRate == 0)
             {
@@ -398,9 +397,9 @@ private:
         }
 
     private:
-        size_t     current_index_;
-        flag_type* incorrect_flag_;
-        size_t*    counter_;
+        size_t         current_index_;
+        flag_type*     incorrect_flag_;
+        unsigned long* counter_;
     };
 
 public:
@@ -670,8 +669,9 @@ TYPED_TEST(HipcubDeviceAdjacentDifferenceLargeTests, LargeIndicesAndOpOnce)
                                 hipMemcpyDeviceToHost));
             HIP_CHECK(hipMemcpy(&counter, d_counter, sizeof(counter), hipMemcpyDeviceToHost));
 
-            ASSERT_EQ(flags[0], 1);
-            ASSERT_EQ(flags[1], 1);
+            ASSERT_EQ(incorrect_flag, 0);
+            ASSERT_EQ(counter, test_utils::ceiling_div(size, sampling_rate));
+
             HIP_CHECK(hipFree(d_temp_storage));
             HIP_CHECK(hipFree(d_incorrect_flag));
             HIP_CHECK(hipFree(d_counter));
