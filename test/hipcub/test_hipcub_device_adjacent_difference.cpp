@@ -585,7 +585,7 @@ struct FocusIndex
     bool left;
 
     template<class T>
-    __device__ const auto operator()(const T& larger_value, const T& smaller_value)
+    __device__ auto operator()(const T& larger_value, const T& smaller_value)
     { 
         return (smaller_value + larger_value) / 2 + (left ? 1 : 0); 
     };
