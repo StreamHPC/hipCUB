@@ -410,7 +410,7 @@ public:
     using iterator_category = std::random_access_iterator_tag;
     using difference_type = std::ptrdiff_t;
 
-    __host__ __device__ check_output_iterator(flag_type* const incorrect_flag, size_t* const    counter)
+    __host__ __device__ check_output_iterator(flag_type* const incorrect_flag, size_t* const counter)
         : current_index_(0), incorrect_flag_(incorrect_flag), counter_(counter)
     {}
 
@@ -584,12 +584,12 @@ TYPED_TEST(HipcubDeviceAdjacentDifferenceLargeTests, LargeIndicesAndOpOnce)
     SCOPED_TRACE(testing::Message() << "with device_id= " << device_id);
     HIP_CHECK(hipSetDevice(device_id));
 
-    using T                                         = size_t;
-    static constexpr bool left                      = TestFixture::left;
-    static constexpr bool copy                      = TestFixture::copy;
-    static constexpr unsigned int sampling_rate     = 10000;
-    using OutputIterator                            = check_output_iterator<sampling_rate>;
-    using flag_type                                 = OutputIterator::flag_type;
+    using T                                     = size_t;
+    static constexpr bool left                  = TestFixture::left;
+    static constexpr bool copy                  = TestFixture::copy;
+    static constexpr unsigned int sampling_rate = 10000;
+    using OutputIterator                        = check_output_iterator<sampling_rate>;
+    using flag_type                             = OutputIterator::flag_type;
 
     SCOPED_TRACE(testing::Message() << "left = " << left << ", copy = " << copy);
 
