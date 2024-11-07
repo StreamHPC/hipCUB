@@ -397,8 +397,8 @@ private:
         }
 
     private:
-        size_t         current_index_;
-        flag_type*     incorrect_flag_;
+        size_t                  current_index_;
+        flag_type*              incorrect_flag_;
         unsigned long long int* counter_;
     };
 
@@ -409,7 +409,8 @@ public:
     using iterator_category = std::random_access_iterator_tag;
     using difference_type = std::ptrdiff_t;
 
-    __host__ __device__ check_output_iterator(flag_type* const incorrect_flag, unsigned long long int* const counter)
+    __host__ __device__ check_output_iterator(flag_type* const              incorrect_flag,
+                                             unsigned long long int* const counter)
         : current_index_(0), incorrect_flag_(incorrect_flag), counter_(counter)
     {}
 
@@ -488,9 +489,9 @@ struct flag_expected_op : public std::binary_function<T, T, discard_write<T>>
     }
 
 private:
-    size_t     current_index_;
-    flag_type* incorrect_flag_;
-    unsigned long long int*    counter_;
+    size_t                  current_index_;
+    flag_type*              incorrect_flag_;
+    unsigned long long int* counter_;
 };
 
 using HipcubDeviceAdjacentDifferenceLargeTestsParams
