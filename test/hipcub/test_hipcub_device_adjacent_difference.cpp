@@ -621,7 +621,7 @@ TYPED_TEST(HipcubDeviceAdjacentDifferenceLargeTests, LargeIndicesAndOpOnce)
             // Return the position where the adjacent difference is expected to be written out.
             // When called with consecutive values the left value is returned at the left-handed difference, and the right value otherwise.
             // The return value is coherent with the boundary values.
-            const auto op = [](const auto& larger_value, const auto& smaller_value)
+            const auto op = [] __device__ (const auto& larger_value, const auto& smaller_value)
             { return (smaller_value + larger_value) / 2 + (left ? 1 : 0); };
 
             static constexpr auto left_tag = std::integral_constant<bool, left>{};
