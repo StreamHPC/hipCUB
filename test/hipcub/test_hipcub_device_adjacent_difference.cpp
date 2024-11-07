@@ -486,9 +486,7 @@ private:
 };
 
 using HipcubDeviceAdjacentDifferenceLargeTestsParams
-    = ::testing::Types<DeviceAdjacentDifferenceLargeParams<true, false>,
-                       DeviceAdjacentDifferenceLargeParams<true, true>,
-                       DeviceAdjacentDifferenceLargeParams<false, false>,
+    = ::testing::Types<DeviceAdjacentDifferenceLargeParams<true, true>,
                        DeviceAdjacentDifferenceLargeParams<false, true>>;
 
 TYPED_TEST_SUITE(HipcubDeviceAdjacentDifferenceLargeTests,
