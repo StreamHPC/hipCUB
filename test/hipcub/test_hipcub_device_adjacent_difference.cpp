@@ -576,6 +576,20 @@ struct flag_expected_op : public std::binary_function<T, T, discard_write<T>>
         return 0;
     }
 };
+    
+// Return the position where the adjacent difference is expected to be written out.
+// When called with consecutive values the left value is returned at the left-handed difference, and the right value otherwise.
+// The return value is coherent with the boundary values.
+struct FocusIndex
+{
+    bool left;
+
+    template<class T>
+    __device__ const auto operator()(const T& larger_value, const T& smaller_value)
+    { 
+        return (smaller_value + larger_value) / 2 + (left ? 1 : 0); 
+    };
+};
 
 TYPED_TEST(HipcubDeviceAdjacentDifferenceLargeTests, LargeIndicesAndOpOnce)
 {
@@ -618,15 +632,11 @@ TYPED_TEST(HipcubDeviceAdjacentDifferenceLargeTests, LargeIndicesAndOpOnce)
 
             const auto input = hipcub::CountingInputIterator<T>(T{0});
 
-            // Return the position where the adjacent difference is expected to be written out.
-            // When called with consecutive values the left value is returned at the left-handed difference, and the right value otherwise.
-            // The return value is coherent with the boundary values.
-            const auto op = [] __device__ (const auto& larger_value, const auto& smaller_value)
-            { return (smaller_value + larger_value) / 2 + (left ? 1 : 0); };
-
             static constexpr auto left_tag = std::integral_constant<bool, left>{};
 
             static constexpr auto copy_tag = std::integral_constant<bool, copy>{};
+            
+            auto op = FocusIndex{left};
 
             // Allocate temporary storage
             std::size_t temp_storage_size = 0;
