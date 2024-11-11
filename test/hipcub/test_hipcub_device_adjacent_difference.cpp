@@ -45,11 +45,6 @@ hipError_t dispatch_adjacent_difference(std::true_type /*left*/,
                                                                 d_input,
                                                                 d_output,
                                                                 std::forward<Args>(args)...);
-    return ::hipcub::DeviceAdjacentDifference::SubtractLeftCopy(d_temp_storage,
-                                                                temp_storage_bytes,
-                                                                d_input,
-                                                                d_output,
-                                                                std::forward<Args>(args)...);
 }
 
 template<class InputIteratorT, class OutputIteratorT, class... Args>
@@ -61,10 +56,6 @@ hipError_t dispatch_adjacent_difference(std::true_type /*left*/,
                                         OutputIteratorT /*d_output*/,
                                         Args&&... args)
 {
-    return ::hipcub::DeviceAdjacentDifference::SubtractLeft(d_temp_storage,
-                                                            temp_storage_bytes,
-                                                            d_input,
-                                                            std::forward<Args>(args)...);
     return ::hipcub::DeviceAdjacentDifference::SubtractLeft(d_temp_storage,
                                                             temp_storage_bytes,
                                                             d_input,
@@ -85,11 +76,6 @@ hipError_t dispatch_adjacent_difference(std::false_type /*left*/,
                                                                  d_input,
                                                                  d_output,
                                                                  std::forward<Args>(args)...);
-    return ::hipcub::DeviceAdjacentDifference::SubtractRightCopy(d_temp_storage,
-                                                                 temp_storage_bytes,
-                                                                 d_input,
-                                                                 d_output,
-                                                                 std::forward<Args>(args)...);
 }
 
 template<class InputIteratorT, class OutputIteratorT, class... Args>
@@ -105,13 +91,8 @@ hipError_t dispatch_adjacent_difference(std::false_type /*left*/,
                                                              temp_storage_bytes,
                                                              d_input,
                                                              std::forward<Args>(args)...);
-    return ::hipcub::DeviceAdjacentDifference::SubtractRight(d_temp_storage,
-                                                             temp_storage_bytes,
-                                                             d_input,
-                                                             std::forward<Args>(args)...);
 }
 
-template<typename Output, typename T, typename BinaryFunction>
 template<typename Output, typename T, typename BinaryFunction>
 auto get_expected_result(const std::vector<T>& input,
                          const BinaryFunction  op,
@@ -122,7 +103,6 @@ auto get_expected_result(const std::vector<T>& input,
     return result;
 }
 
-template<typename Output, typename T, typename BinaryFunction>
 template<typename Output, typename T, typename BinaryFunction>
 auto get_expected_result(const std::vector<T>& input,
                          const BinaryFunction  op,
@@ -309,7 +289,9 @@ private:
     class check_output
     {
     public:
-        __device__ check_output(flag_type* incorrect_flag, size_t current_index, unsigned long long int* counter)
+        __device__ check_output(flag_type*              incorrect_flag,
+                                size_t                  current_index,
+                                unsigned long long int* counter)
             : current_index_(current_index), incorrect_flag_(incorrect_flag), counter_(counter)
         {}
 
@@ -346,59 +328,83 @@ public:
         : current_index_(0), incorrect_flag_(incorrect_flag), counter_(counter)
     {}
 
-     __device__ bool operator==(const check_output_iterator& rhs) const
+    __device__
+    bool operator==(const check_output_iterator& rhs) const
     {
         return current_index_ == rhs.current_index_;
     }
-    __device__ bool operator!=(const check_output_iterator& rhs) const
+    __device__
+    bool operator!=(const check_output_iterator& rhs) const
     {
         return !(*this == rhs);
     }
-    __device__ reference operator*()
+    __device__
+    reference
+        operator*()
     {
         return reference(incorrect_flag_, current_index_, counter_);
     }
-    __device__ reference operator[](const difference_type distance) const
+    __device__
+    reference
+        operator[](const difference_type distance) const
     {
         return *(*this + distance);
     }
-    __host__ __device__ check_output_iterator& operator+=(const difference_type rhs)
+    __host__ __device__
+    check_output_iterator&
+        operator+=(const difference_type rhs)
     {
         current_index_ += rhs;
         return *this;
     }
-    __host__ __device__ check_output_iterator& operator-=(const difference_type rhs)
+    __host__ __device__
+    check_output_iterator&
+        operator-=(const difference_type rhs)
     {
         current_index_ -= rhs;
         return *this;
     }
-    __host__ __device__ difference_type operator-(const check_output_iterator& rhs) const
+    __host__ __device__
+    difference_type
+        operator-(const check_output_iterator& rhs) const
     {
         return current_index_ - rhs.current_index_;
     }
-    __host__ __device__ check_output_iterator operator+(const difference_type rhs) const
+    __host__ __device__
+    check_output_iterator
+        operator+(const difference_type rhs) const
     {
         return check_output_iterator(*this) += rhs;
     }
-    __host__ __device__ check_output_iterator operator-(const difference_type rhs) const
+    __host__ __device__
+    check_output_iterator
+        operator-(const difference_type rhs) const
     {
         return check_output_iterator(*this) -= rhs;
     }
-    __host__ __device__ check_output_iterator& operator++()
+    __host__ __device__
+    check_output_iterator&
+        operator++()
     {
         ++current_index_;
         return *this;
     }
-    __host__ __device__ check_output_iterator& operator--()
+    __host__ __device__
+    check_output_iterator&
+        operator--()
     {
         --current_index_;
         return *this;
     }
-    __host__ __device__ check_output_iterator operator++(int)
+    __host__ __device__
+    check_output_iterator
+        operator++(int)
     {
         return ++check_output_iterator{*this};
     }
-    __host__ __device__ check_output_iterator operator--(int)
+    __host__ __device__
+    check_output_iterator
+        operator--(int)
     {
         return --check_output_iterator{*this};
     }
@@ -415,7 +421,7 @@ using HipcubDeviceAdjacentDifferenceLargeTestsParams
 
 TYPED_TEST_SUITE(HipcubDeviceAdjacentDifferenceLargeTests,
                  HipcubDeviceAdjacentDifferenceLargeTestsParams);
-    
+
 // Return the position where the adjacent difference is expected to be written out.
 // When called with consecutive values the left value is returned at the left-handed difference, and the right value otherwise.
 // The return value is coherent with the boundary values.
@@ -424,9 +430,10 @@ struct FocusIndex
     bool left;
 
     template<class T>
-    __device__ auto operator()(const T& larger_value, const T& smaller_value)
-    { 
-        return (smaller_value + larger_value) / 2 + (left ? 1 : 0); 
+    __device__
+    auto operator()(const T& larger_value, const T& smaller_value)
+    {
+        return (smaller_value + larger_value) / 2 + (left ? 1 : 0);
     };
 };
 
@@ -474,7 +481,7 @@ TYPED_TEST(HipcubDeviceAdjacentDifferenceLargeTests, LargeIndicesAndOpOnce)
             static constexpr auto left_tag = std::integral_constant<bool, left>{};
 
             static constexpr auto copy_tag = std::integral_constant<bool, copy>{};
-            
+
             auto op = FocusIndex{left};
 
             // Allocate temporary storage
