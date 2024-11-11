@@ -290,8 +290,8 @@ private:
     {
     public:
         HIPCUB_DEVICE check_output(flag_type*              incorrect_flag,
-                                size_t                  current_index,
-                                unsigned long long int* counter)
+                                   size_t                  current_index,
+                                   unsigned long long int* counter)
             : current_index_(current_index), incorrect_flag_(incorrect_flag), counter_(counter)
         {}
 
@@ -428,16 +428,18 @@ TYPED_TEST_SUITE(HipcubDeviceAdjacentDifferenceLargeTests,
 template<bool left>
 struct FocusIndex
 {
-    template<class T, bool left_ = left,typename std::enable_if<left_>::type* = nullptr>
-    HIPCUB_HOST_DEVICE 
-    constexpr auto operator()(const T& larger_value, const T& smaller_value) const noexcept
+    template<class T, bool left_ = left, typename std::enable_if<left_>::type* = nullptr>
+    HIPCUB_HOST_DEVICE
+    constexpr auto
+        operator()(const T& larger_value, const T& smaller_value) const noexcept
     {
         return (smaller_value + larger_value) / 2 + 1;
     };
 
-    template<class T, bool left_ = left,typename std::enable_if<!left_>::type* = nullptr>
-    HIPCUB_HOST_DEVICE 
-    constexpr auto operator()(const T& larger_value, const T& smaller_value) const noexcept
+    template<class T, bool left_ = left, typename std::enable_if<!left_>::type* = nullptr>
+    HIPCUB_HOST_DEVICE
+    constexpr auto
+        operator()(const T& larger_value, const T& smaller_value) const noexcept
     {
         return (smaller_value + larger_value) / 2 + 0;
     };
@@ -539,4 +541,5 @@ TYPED_TEST(HipcubDeviceAdjacentDifferenceLargeTests, LargeIndicesAndOpOnce)
             HIP_CHECK(hipFree(d_counter));
         }
     }
+
 }
