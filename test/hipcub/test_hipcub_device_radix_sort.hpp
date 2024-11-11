@@ -495,6 +495,7 @@ void sort_pairs()
         unsigned int seed_value
             = seed_index < random_seeds_count ? rand() : seeds[seed_index - random_seeds_count];
         SCOPED_TRACE(testing::Message() << "with seed= " << seed_value);
+
         for(size_t size : test_utils::get_sizes(seed_value))
         {
             if(size > (1 << 20) && !check_large_sizes)
@@ -983,6 +984,7 @@ void sort_pairs_double_buffer()
         unsigned int seed_value
             = seed_index < random_seeds_count ? rand() : seeds[seed_index - random_seeds_count];
         SCOPED_TRACE(testing::Message() << "with seed= " << seed_value);
+
         for(size_t size : test_utils::get_sizes(seed_value))
         {
             if(size > (1 << 20) && !check_large_sizes)

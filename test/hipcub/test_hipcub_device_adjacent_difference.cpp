@@ -289,13 +289,13 @@ private:
     class check_output
     {
     public:
-        __device__ check_output(flag_type*              incorrect_flag,
+        HIPCUB_DEVICE check_output(flag_type*              incorrect_flag,
                                 size_t                  current_index,
                                 unsigned long long int* counter)
             : current_index_(current_index), incorrect_flag_(incorrect_flag), counter_(counter)
         {}
 
-        __device__
+        HIPCUB_DEVICE
         check_output&
             operator=(size_t value)
         {
@@ -323,86 +323,86 @@ public:
     using iterator_category = std::random_access_iterator_tag;
     using difference_type = std::ptrdiff_t;
 
-    __host__ __device__ check_output_iterator(flag_type* const              incorrect_flag,
+    HIPCUB_HOST_DEVICE check_output_iterator(flag_type* const              incorrect_flag,
                                              unsigned long long int* const counter)
         : current_index_(0), incorrect_flag_(incorrect_flag), counter_(counter)
     {}
 
-    __device__
+    HIPCUB_DEVICE
     bool operator==(const check_output_iterator& rhs) const
     {
         return current_index_ == rhs.current_index_;
     }
-    __device__
+    HIPCUB_DEVICE
     bool operator!=(const check_output_iterator& rhs) const
     {
         return !(*this == rhs);
     }
-    __device__
+    HIPCUB_DEVICE
     reference
         operator*()
     {
         return reference(incorrect_flag_, current_index_, counter_);
     }
-    __device__
+    HIPCUB_DEVICE
     reference
         operator[](const difference_type distance) const
     {
         return *(*this + distance);
     }
-    __host__ __device__
+    HIPCUB_HOST_DEVICE
     check_output_iterator&
         operator+=(const difference_type rhs)
     {
         current_index_ += rhs;
         return *this;
     }
-    __host__ __device__
+    HIPCUB_HOST_DEVICE
     check_output_iterator&
         operator-=(const difference_type rhs)
     {
         current_index_ -= rhs;
         return *this;
     }
-    __host__ __device__
+    HIPCUB_HOST_DEVICE
     difference_type
         operator-(const check_output_iterator& rhs) const
     {
         return current_index_ - rhs.current_index_;
     }
-    __host__ __device__
+    HIPCUB_HOST_DEVICE
     check_output_iterator
         operator+(const difference_type rhs) const
     {
         return check_output_iterator(*this) += rhs;
     }
-    __host__ __device__
+    HIPCUB_HOST_DEVICE
     check_output_iterator
         operator-(const difference_type rhs) const
     {
         return check_output_iterator(*this) -= rhs;
     }
-    __host__ __device__
+    HIPCUB_HOST_DEVICE
     check_output_iterator&
         operator++()
     {
         ++current_index_;
         return *this;
     }
-    __host__ __device__
+    HIPCUB_HOST_DEVICE
     check_output_iterator&
         operator--()
     {
         --current_index_;
         return *this;
     }
-    __host__ __device__
+    HIPCUB_HOST_DEVICE
     check_output_iterator
         operator++(int)
     {
         return ++check_output_iterator{*this};
     }
-    __host__ __device__
+    HIPCUB_HOST_DEVICE
     check_output_iterator
         operator--(int)
     {
@@ -425,15 +425,21 @@ TYPED_TEST_SUITE(HipcubDeviceAdjacentDifferenceLargeTests,
 // Return the position where the adjacent difference is expected to be written out.
 // When called with consecutive values the left value is returned at the left-handed difference, and the right value otherwise.
 // The return value is coherent with the boundary values.
+template<bool left>
 struct FocusIndex
 {
-    bool left;
-
-    template<class T>
-    __device__
-    auto operator()(const T& larger_value, const T& smaller_value)
+    template<class T, bool left_ = left,typename std::enable_if<left_>::type* = nullptr>
+    HIPCUB_HOST_DEVICE 
+    constexpr auto operator()(const T& larger_value, const T& smaller_value) const noexcept
     {
-        return (smaller_value + larger_value) / 2 + (left ? 1 : 0);
+        return (smaller_value + larger_value) / 2 + 1;
+    };
+
+    template<class T, bool left_ = left,typename std::enable_if<!left_>::type* = nullptr>
+    HIPCUB_HOST_DEVICE 
+    constexpr auto operator()(const T& larger_value, const T& smaller_value) const noexcept
+    {
+        return (smaller_value + larger_value) / 2 + 0;
     };
 };
 
@@ -482,7 +488,7 @@ TYPED_TEST(HipcubDeviceAdjacentDifferenceLargeTests, LargeIndicesAndOpOnce)
 
             static constexpr auto copy_tag = std::integral_constant<bool, copy>{};
 
-            auto op = FocusIndex{left};
+            FocusIndex<left> op;
 
             // Allocate temporary storage
             std::size_t temp_storage_size = 0;

@@ -357,6 +357,7 @@ TYPED_TEST(HipcubDeviceScanTests, InclusiveScanByKey)
         unsigned int seed_value
             = seed_index < random_seeds_count ? rand() : seeds[seed_index - random_seeds_count];
         SCOPED_TRACE(testing::Message() << "with seed= " << seed_value);
+
         for(size_t size : test_utils::get_sizes(seed_value))
         {
             SCOPED_TRACE(testing::Message() << "with size= " << size);
@@ -743,7 +744,7 @@ TYPED_TEST(HipcubDeviceScanTests, ExclusiveScanByKey)
     using acc_type     = typename accum_type<T, scan_op_type>::type;
     using IteratorType = hipcub::TransformInputIterator<acc_type, hipcub::CastOp<acc_type>, T*>;
 
-    // fornon-associative operations in inclusive scan
+    // for non-associative operations in inclusive scan
     // intermediate results use the type of input iterator, then
     // as all conversions in the tests are to more precise types,
     // intermediate results use the same or more precise acc_type,
