@@ -39,14 +39,6 @@ hipError_t dispatch_adjacent_difference(std::true_type /*left*/,
                                         InputIteratorT  d_input,
                                         OutputIteratorT d_output,
                                         Args&&... args)
-template<class InputIteratorT, class OutputIteratorT, class... Args>
-hipError_t dispatch_adjacent_difference(std::true_type /*left*/,
-                                        std::true_type /*copy*/,
-                                        void*           d_temp_storage,
-                                        size_t&         temp_storage_bytes,
-                                        InputIteratorT  d_input,
-                                        OutputIteratorT d_output,
-                                        Args&&... args)
 {
     return ::hipcub::DeviceAdjacentDifference::SubtractLeftCopy(d_temp_storage,
                                                                 temp_storage_bytes,
@@ -154,11 +146,6 @@ struct params
     static constexpr bool left       = Left;
     static constexpr bool copy       = Copy;
     static constexpr bool use_graphs = UseGraphs;
-    using input_type                 = InputT;
-    using output_type                = OutputT;
-    static constexpr bool left       = Left;
-    static constexpr bool copy       = Copy;
-    static constexpr bool use_graphs = UseGraphs;
 };
 
 template<class Params>
@@ -201,28 +188,11 @@ TYPED_TEST(HipcubDeviceAdjacentDifference, SubtractLeftCopy)
     }
 
     for(size_t seed_index = 0; seed_index < random_seeds_count + seed_size; seed_index++)
-    using input_type = typename TestFixture::params::input_type;
-    static constexpr std::integral_constant<bool, TestFixture::params::left> left_constant{};
-    static constexpr std::integral_constant<bool, TestFixture::params::copy> copy_constant{};
-    using output_type
-        = std::conditional_t<copy_constant, input_type, typename TestFixture::params::output_type>;
-    static constexpr ::hipcub::Difference op;
-
-    hipStream_t stream = 0;
-    if(TestFixture::params::use_graphs)
     {
-        // Default stream does not support hipGraph stream capture, so create one
-        HIP_CHECK(hipStreamCreateWithFlags(&stream, hipStreamNonBlocking));
-    }
-
-    for(size_t seed_index = 0; seed_index < random_seeds_count + seed_size; seed_index++)
-    {
-        unsigned int seed_value
         unsigned int seed_value
             = seed_index < random_seeds_count ? rand() : seeds[seed_index - random_seeds_count];
         SCOPED_TRACE(testing::Message() << "with seed= " << seed_value);
 
-        for(size_t size : test_utils::get_sizes(seed_value))
         for(size_t size : test_utils::get_sizes(seed_value))
         {
             SCOPED_TRACE(testing::Message() << "with size= " << size);
@@ -241,38 +211,9 @@ TYPED_TEST(HipcubDeviceAdjacentDifference, SubtractLeftCopy)
                 HIP_CHECK(
                     test_common_utils::hipMallocHelper(&d_output, size * sizeof(d_output[0])));
             }
-            SCOPED_TRACE(testing::Message() << "with size= " << size);
-
-            const auto input = test_utils::get_random_data<input_type>(
-                size,
-                test_utils::convert_to_device<input_type>(-50),
-                test_utils::convert_to_device<input_type>(50),
-                seed_value);
-
-            input_type*  d_input{};
-            output_type* d_output{};
-            HIP_CHECK(test_common_utils::hipMallocHelper(&d_input, size * sizeof(d_input[0])));
-            if(copy_constant)
-            {
-                HIP_CHECK(
-                    test_common_utils::hipMallocHelper(&d_output, size * sizeof(d_output[0])));
-            }
             HIP_CHECK(
                 hipMemcpy(d_input, input.data(), size * sizeof(input_type), hipMemcpyHostToDevice));
-                hipMemcpy(d_input, input.data(), size * sizeof(input_type), hipMemcpyHostToDevice));
 
-            const auto expected = get_expected_result<output_type>(input, op, left_constant);
-
-            size_t temporary_storage_bytes = 0;
-            HIP_CHECK(dispatch_adjacent_difference(left_constant,
-                                                   copy_constant,
-                                                   nullptr,
-                                                   temporary_storage_bytes,
-                                                   d_input,
-                                                   d_output,
-                                                   size,
-                                                   op,
-                                                   stream));
             const auto expected = get_expected_result<output_type>(input, op, left_constant);
 
             size_t temporary_storage_bytes = 0;
@@ -319,16 +260,7 @@ TYPED_TEST(HipcubDeviceAdjacentDifference, SubtractLeftCopy)
                                 copy_constant ? d_output : d_input,
                                 size * sizeof(output[0]),
                                 hipMemcpyDeviceToHost));
-            std::vector<output_type> output(size);
-            HIP_CHECK(hipMemcpy(output.data(),
-                                copy_constant ? d_output : d_input,
-                                size * sizeof(output[0]),
-                                hipMemcpyDeviceToHost));
 
-            HIP_CHECK(hipFree(d_temporary_storage));
-            HIP_CHECK(hipFree(d_input));
-            if(copy_constant)
-            {
             HIP_CHECK(hipFree(d_temporary_storage));
             HIP_CHECK(hipFree(d_input));
             if(copy_constant)
@@ -414,76 +346,59 @@ public:
         : current_index_(0), incorrect_flag_(incorrect_flag), counter_(counter)
     {}
 
-    __device__
-    bool operator==(const check_output_iterator& rhs) const
+     __device__ bool operator==(const check_output_iterator& rhs) const
     {
         return current_index_ == rhs.current_index_;
     }
-    __device__
-    bool operator!=(const check_output_iterator& rhs) const
+    __device__ bool operator!=(const check_output_iterator& rhs) const
     {
         return !(*this == rhs);
     }
-    __device__
-    reference
-        operator*()
+    __device__ reference operator*()
     {
         return reference(incorrect_flag_, current_index_, counter_);
     }
-    __device__
-    reference
-        operator[](const difference_type distance) const
+    __device__ reference operator[](const difference_type distance) const
     {
         return *(*this + distance);
     }
-    __device__
-    discard_write&
-        operator=(T)
+    __host__ __device__ check_output_iterator& operator+=(const difference_type rhs)
     {
         current_index_ += rhs;
         return *this;
     }
-};
-
-template<typename T, typename InputIterator, typename UnaryFunction>
-HIPCUB_HOST_DEVICE inline auto make_transform_iterator(InputIterator iterator,
-                                                       UnaryFunction transform)
-{
-    return ::hipcub::TransformInputIterator<T, UnaryFunction, InputIterator>(iterator, transform);
-}
-
-template<typename T>
-struct conversion_op : public std::unary_function<T, discard_write<T>>
-{
-    HIPCUB_HOST_DEVICE
-    auto operator()(const T i) const
+    __host__ __device__ check_output_iterator& operator-=(const difference_type rhs)
+    {
+        current_index_ -= rhs;
+        return *this;
+    }
+    __host__ __device__ difference_type operator-(const check_output_iterator& rhs) const
+    {
+        return current_index_ - rhs.current_index_;
+    }
+    __host__ __device__ check_output_iterator operator+(const difference_type rhs) const
     {
         return check_output_iterator(*this) += rhs;
     }
-};
-
-template<typename T>
-struct flag_expected_op : public std::binary_function<T, T, discard_write<T>>
-{
-    bool left;
-    T    expected;
-    T    expected_above_limit;
-    int* d_flags;
-    flag_expected_op(bool left, T expected, T expected_above_limit, int* d_flags)
-        : left(left)
-        , expected(expected)
-        , expected_above_limit(expected_above_limit)
-        , d_flags(d_flags)
-    {}
-
-    HIPCUB_HOST_DEVICE
-    T operator()(const discard_write<T>& minuend, const discard_write<T>& subtrahend)
+    __host__ __device__ check_output_iterator operator-(const difference_type rhs) const
+    {
+        return check_output_iterator(*this) -= rhs;
+    }
+    __host__ __device__ check_output_iterator& operator++()
+    {
+        ++current_index_;
+        return *this;
+    }
+    __host__ __device__ check_output_iterator& operator--()
+    {
+        --current_index_;
+        return *this;
+    }
+    __host__ __device__ check_output_iterator operator++(int)
     {
         return ++check_output_iterator{*this};
     }
-    __host__ __device__
-    check_output_iterator
-        operator--(int)
+    __host__ __device__ check_output_iterator operator--(int)
     {
         return --check_output_iterator{*this};
     }
@@ -500,83 +415,6 @@ using HipcubDeviceAdjacentDifferenceLargeTestsParams
 
 TYPED_TEST_SUITE(HipcubDeviceAdjacentDifferenceLargeTests,
                  HipcubDeviceAdjacentDifferenceLargeTestsParams);
-
-template<class T>
-struct discard_write
-{
-    T value;
-
-    __device__ operator T() const
-    {
-        return value;
-    }
-    __device__
-    discard_write&
-        operator=(T)
-    {
-        return *this;
-    }
-};
-
-template<class T, class InputIterator, class UnaryFunction>
-HIPCUB_HOST_DEVICE
-inline auto make_transform_iterator(InputIterator iterator, UnaryFunction transform)
-{
-    return ::hipcub::TransformInputIterator<T, UnaryFunction, InputIterator>(iterator, transform);
-}
-
-template<class T>
-struct conversion_op : public std::unary_function<T, discard_write<T>>
-{
-    HIPCUB_HOST_DEVICE
-    auto operator()(const T i) const
-    {
-        return discard_write<T>{i};
-    }
-};
-
-template<class T>
-struct flag_expected_op : public std::binary_function<T, T, discard_write<T>>
-{
-    bool left;
-    T    expected;
-    T    expected_above_limit;
-    int* d_flags;
-    flag_expected_op(bool left, T expected, T expected_above_limit, int* d_flags)
-        : left(left)
-        , expected(expected)
-        , expected_above_limit(expected_above_limit)
-        , d_flags(d_flags)
-    {}
-
-    HIPCUB_HOST_DEVICE
-    T operator()(const discard_write<T>& minuend, const discard_write<T>& subtrahend)
-    {
-        if(left)
-        {
-            if(minuend == expected && subtrahend == expected - 1)
-            {
-                d_flags[0] = 1;
-            }
-            if(minuend == expected_above_limit && subtrahend == expected_above_limit - 1)
-            {
-                d_flags[1] = 1;
-            }
-        }
-        else
-        {
-            if(minuend == expected && subtrahend == expected + 1)
-            {
-                d_flags[0] = 1;
-            }
-            if(minuend == expected_above_limit && subtrahend == expected_above_limit + 1)
-            {
-                d_flags[1] = 1;
-            }
-        }
-        return 0;
-    }
-};
     
 // Return the position where the adjacent difference is expected to be written out.
 // When called with consecutive values the left value is returned at the left-handed difference, and the right value otherwise.
