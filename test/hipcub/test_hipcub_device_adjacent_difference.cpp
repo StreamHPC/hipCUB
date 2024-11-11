@@ -541,5 +541,4 @@ TYPED_TEST(HipcubDeviceAdjacentDifferenceLargeTests, LargeIndicesAndOpOnce)
             HIP_CHECK(hipFree(d_counter));
         }
     }
-
 }
