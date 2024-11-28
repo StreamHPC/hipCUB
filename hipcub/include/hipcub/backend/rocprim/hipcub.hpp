@@ -102,6 +102,7 @@
 // Util
 #include "tuple.hpp"
 #include "util_allocator.hpp"
+#include "util_macro.hpp"
 #include "util_ptx.hpp"
 #include "util_type.hpp"
 

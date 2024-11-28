@@ -2,6 +2,11 @@
 
 Full documentation for hipCUB is available at [https://rocm.docs.amd.com/projects/hipCUB/en/latest/](https://rocm.docs.amd.com/projects/hipCUB/en/latest/).
 
+## hipCUB-3.4.x for ROCm 6.4.x
+
+## Added
+* Added CUB macros missing from hipCUB
+
 ## hipCUB-3.4.0 for ROCm 6.4.0
 
 ### Added
