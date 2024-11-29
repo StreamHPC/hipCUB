@@ -102,8 +102,10 @@
 // Util
 #include "tuple.hpp"
 #include "util_allocator.hpp"
+#include "util_device.hpp"
 #include "util_macro.hpp"
 #include "util_ptx.hpp"
+#include "util_temporary_storage.hpp"
 #include "util_type.hpp"
 
 #endif // HIPCUB_ROCPRIM_HIPCUB_HPP_

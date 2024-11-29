@@ -2,11 +2,6 @@
 
 Full documentation for hipCUB is available at [https://rocm.docs.amd.com/projects/hipCUB/en/latest/](https://rocm.docs.amd.com/projects/hipCUB/en/latest/).
 
-## hipCUB-3.4.x for ROCm 6.4.x
-
-## Added
-* Added CUB macros missing from hipCUB
-
 ## hipCUB-3.4.0 for ROCm 6.4.0
 
 ### Added
@@ -17,6 +12,8 @@ Full documentation for hipCUB is available at [https://rocm.docs.amd.com/project
 * Added `--emulation` option for `rtest.py`
   * Unit tests can be run with `[--emulation|-e|--test|-t]=<test_name>`
 * Added `DeviceSelect::FlaggedIf` and its inplace overload.
+* Added CUB macros missing from hipCUB
+* Added `hipcub::AliasTemporaries` function for CUB parity.
 
 ### Changed
 * Changed the subset of tests that are run for smoke tests such that the smoke test will complete with faster run-time and to never exceed 2GB of vram usage. Use `python rtest.py [--emulation|-e|--test|-t]=smoke` to run these tests.
