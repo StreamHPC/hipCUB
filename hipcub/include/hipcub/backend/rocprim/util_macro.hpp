@@ -41,18 +41,8 @@ BEGIN_HIPCUB_NAMESPACE
  * @{
  */
 
-#ifndef HIPCUB_ALIGN
-    #if defined(_WIN32) || defined(_WIN64)
-        /// Align struct
-        #define HIPCUB_ALIGN(bytes) __declspec(align(32))
-    #else
-        /// Align struct
-        #define HIPCUB_ALIGN(bytes) __attribute__((aligned(bytes)))
-    #endif
-#endif
-
-#define HIPCUB_PREVENT_MACRO_SUBSTITUTION
-
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+    #define HIPCUB_PREVENT_MACRO_SUBSTITUTION
 template<typename T, typename U>
 constexpr __host__ __device__
 auto min HIPCUB_PREVENT_MACRO_SUBSTITUTION(T&& t, U&& u)
@@ -68,6 +58,8 @@ auto max HIPCUB_PREVENT_MACRO_SUBSTITUTION(T&& t, U&& u)
 {
     return t < u ? std::forward<U>(u) : std::forward<T>(t);
 }
+    #undef CUB_PREVENT_MACRO_SUBSTITUTION
+#endif
 
 #ifndef HIPCUB_MAX
     /// Select maximum(a, b)
@@ -91,7 +83,7 @@ auto max HIPCUB_PREVENT_MACRO_SUBSTITUTION(T&& t, U&& u)
 
 #ifndef HIPCUB_ROUND_UP_NEAREST
     /// x rounded up to the nearest multiple of y
-    #define HIPCUB_ROUND_UP_NEAREST(x, y) ((((x) + (y)-1) / (y)) * y)
+    #define HIPCUB_ROUND_UP_NEAREST(x, y) (HIPCUB_QUOTIENT_CEILING(x, y) * y)
 #endif
 
 #ifndef HIPCUB_ROUND_DOWN_NEAREST
@@ -99,15 +91,12 @@ auto max HIPCUB_PREVENT_MACRO_SUBSTITUTION(T&& t, U&& u)
     #define HIPCUB_ROUND_DOWN_NEAREST(x, y) (((x) / (y)) * y)
 #endif
 
-#ifndef HIPCUB_STATIC_ASSERT
-    #ifndef DOXYGEN_SHOULD_SKIP_THIS // Do not document
-        #define HIPCUB_CAT_(a, b) a##b
-        #define HIPCUB_CAT(a, b) CUB_CAT_(a, b)
-    #endif // DOXYGEN_SHOULD_SKIP_THIS
-
-    /// Static assert
-    #define HIPCUB_STATIC_ASSERT(cond, msg) \
-        typedef int HIPCUB_CAT(cub_static_assert, __LINE__)[(cond) ? 1 : -1]
+#ifndef HIPCUB_DEFINE_KERNEL_GETTER
+    #define HIPCUB_DEFINE_KERNEL_GETTER(name, ...)                             \
+        HIPCUB_RUNTIME_FUNCTION static constexpr decltype(&__VA_ARGS__) name() \
+        {                                                                      \
+            return &__VA_ARGS__;                                               \
+        }
 #endif
 
 /** @} */ // end group UtilModule
