@@ -31,7 +31,7 @@
 #ifdef __HIP_PLATFORM_AMD__
     #include "backend/rocprim/util_macro.hpp"
 #elif defined(__HIP_PLATFORM_NVIDIA__)
-    #include "cub/util_macro.cuh"
+    #include "backend/cub/util_macro.hpp"
 #endif
 
 #endif // HIPCUB_UTIL_MACRO_HPP_
