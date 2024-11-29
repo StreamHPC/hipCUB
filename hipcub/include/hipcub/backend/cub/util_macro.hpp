@@ -27,72 +27,45 @@
  *
  ******************************************************************************/
 
-#ifndef HIPCUB_ROCPRIM_MACRO_HPP_
-#define HIPCUB_ROCPRIM_MACRO_HPP_
+#ifndef HIPCUB_CUB_MACRO_HPP_
+#define HIPCUB_CUB_MACRO_HPP_
 
 #include "../../config.hpp"
 
-#include <utility>
+#include "cub/util_macro.cuh"
 
 BEGIN_HIPCUB_NAMESPACE
 
-/**
- * \addtogroup UtilModule
- * @{
- */
-
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-    #define HIPCUB_PREVENT_MACRO_SUBSTITUTION
-template<typename T, typename U>
-constexpr __host__ __device__
-auto min HIPCUB_PREVENT_MACRO_SUBSTITUTION(T&& t, U&& u)
-    -> decltype(t < u ? std::forward<T>(t) : std::forward<U>(u))
-{
-    return t < u ? std::forward<T>(t) : std::forward<U>(u);
-}
-
-template<typename T, typename U>
-constexpr __host__ __device__
-auto max HIPCUB_PREVENT_MACRO_SUBSTITUTION(T&& t, U&& u)
-    -> decltype(t < u ? std::forward<U>(u) : std::forward<T>(t))
-{
-    return t < u ? std::forward<U>(u) : std::forward<T>(t);
-}
-    #undef HIPCUB_PREVENT_MACRO_SUBSTITUTION
-#endif
-
 #ifndef HIPCUB_MAX
     /// Select maximum(a, b)
-    #define HIPCUB_MAX(a, b) (((b) > (a)) ? (b) : (a))
+    #define HIPCUB_MAX(a, b) CUB_MAX(a, b)
 #endif
 
 #ifndef HIPCUB_MIN
     /// Select minimum(a, b)
-    #define HIPCUB_MIN(a, b) (((b) < (a)) ? (b) : (a))
+    #define HIPCUB_MIN(a, b) CUB_MIN(a, b)
 #endif
 
 #ifndef HIPCUB_QUOTIENT_FLOOR
     /// Quotient of x/y rounded down to nearest integer
-    #define HIPCUB_QUOTIENT_FLOOR(x, y) ((x) / (y))
+    #define HIPCUB_QUOTIENT_FLOOR(x, y) CUB_QUOTIENT_FLOOR(x, y)
 #endif
 
 #ifndef HIPCUB_QUOTIENT_CEILING
     /// Quotient of x/y rounded up to nearest integer
-    #define HIPCUB_QUOTIENT_CEILING(x, y) (((x) + (y)-1) / (y))
+    #define HIPCUB_QUOTIENT_CEILING(x, y) CUB_QUOTIENT_CEILING(x, y)
 #endif
 
 #ifndef HIPCUB_ROUND_UP_NEAREST
     /// x rounded up to the nearest multiple of y
-    #define HIPCUB_ROUND_UP_NEAREST(x, y) (HIPCUB_QUOTIENT_CEILING(x, y) * y)
+    #define HIPCUB_ROUND_UP_NEAREST(x, y) CUB_ROUND_UP_NEAREST(x, y)
 #endif
 
 #ifndef HIPCUB_ROUND_DOWN_NEAREST
     /// x rounded down to the nearest multiple of y
-    #define HIPCUB_ROUND_DOWN_NEAREST(x, y) (((x) / (y)) * y)
+    #define HIPCUB_ROUND_DOWN_NEAREST(x, y) CUB_ROUND_DOWN_NEAREST(x, y)
 #endif
-
-/** @} */ // end group UtilModule
 
 END_HIPCUB_NAMESPACE
 
-#endif // HIPCUB_ROCPRIM_MACRO_HPP_
+#endif // HIPCUB_CUB_MACRO_HPP_
