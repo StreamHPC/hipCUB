@@ -68,8 +68,7 @@ else()
   set(ROCM_ROOT "/opt/rocm" CACHE PATH "Root directory of the ROCm installation")
 endif()
 
-
-# Set the header wrapper ON by default.
+# Set the header wrapper OFF by default.
 option(BUILD_FILE_REORG_BACKWARD_COMPATIBILITY "Build with file/folder reorg with backward compatibility enabled" OFF)
 
 # Add hipCUB's CMake modules
@@ -131,6 +130,7 @@ endif()
 # Setup VERSION
 set(VERSION_STRING "3.4.0")
 rocm_setup_version(VERSION ${VERSION_STRING})
+math(EXPR hipcub_VERSION_FULL "${hipcub_VERSION_MAJOR} * 100000 + ${hipcub_VERSION_MINOR} * 100 + ${hipcub_VERSION_PATCH}")
 
 # Print configuration summary
 include(cmake/Summary.cmake)

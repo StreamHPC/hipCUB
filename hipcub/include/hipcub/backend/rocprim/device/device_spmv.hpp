@@ -64,9 +64,8 @@ struct SpmvParams
 
 static constexpr uint32_t CsrMVKernel_MaxThreads = 256;
 
-template <typename ValueT>
-static __global__ void
-CsrMVKernel(SpmvParams<ValueT, int> spmv_params)
+template<typename ValueT>
+static ROCPRIM_KERNEL void CsrMVKernel(SpmvParams<ValueT, int> spmv_params)
 {
     __shared__ ValueT partial;
 
@@ -183,4 +182,3 @@ HIPCUB_DETAIL_DEPRECATED_DEBUG_SYNCHRONOUS HIPCUB_RUNTIME_FUNCTION static hipErr
 END_HIPCUB_NAMESPACE
 
 #endif // HIPCUB_CUB_DEVICE_DEVICE_SELECT_HPP_
-

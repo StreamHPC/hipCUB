@@ -2,6 +2,12 @@
 
 Full documentation for hipCUB is available at [https://rocm.docs.amd.com/projects/hipCUB/en/latest/](https://rocm.docs.amd.com/projects/hipCUB/en/latest/).
 
+## (Unreleased) hipCUB 3.x.x for ROCm 6.x.x
+
+### Changed
+
+* Changed symbol visibility: all kernels now have hidden visibility, inline namespace with the library version is added, e.g. `hipcub::HIPCUB_300400_NS::...`. This allows to link multiple libraries built with different versions of hipCUB.
+
 ## hipCUB-3.4.0 for ROCm 6.4.0
 
 ### Added

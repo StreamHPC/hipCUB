@@ -32,13 +32,44 @@
 
 #include <hip/hip_runtime.h>
 
+// Version
+#include "hipcub_version.hpp" // IWYU pragma: export
+
 #define HIPCUB_NAMESPACE hipcub
 
-#define BEGIN_HIPCUB_NAMESPACE \
-    namespace hipcub {
+// Inline namespace (e.g. HIPCUB_300400_NS where 300400 is the hipCUB version) is used to
+// eliminate issues when shared libraries are built with different versions of hipCUB so they may
+// have symbols with the same name but different content.
+// HIPCUB_DISABLE_INLINE_NAMESPACE can be defined to disable inline namespaces (the old behavior).
+// HIPCUB_INLINE_NAMESPACE can be defined to override the standard inline namespace name.
+// Additionally, all kernels have hidden visibility.
+// For rocPRIM backend, see rocprim/config.hpp for similar definitions.
+#if defined(DOXYGEN_SHOULD_SKIP_THIS) || defined(HIPCUB_DISABLE_INLINE_NAMESPACE)
+    #define HIPCUB_INLINE_NAMESPACE
+    #define BEGIN_HIPCUB_INLINE_NAMESPACE
+    #define END_HIPCUB_INLINE_NAMESPACE
+#else
+    #define HIPCUB_CONCAT_(SEP, A, B) A##SEP##B
+    #define HIPCUB_CONCAT(SEP, A, B) HIPCUB_CONCAT_(SEP, A, B)
 
-#define END_HIPCUB_NAMESPACE \
-    } /* hipcub */
+    #ifndef HIPCUB_INLINE_NAMESPACE
+        #define HIPCUB_INLINE_NAMESPACE \
+            HIPCUB_CONCAT(_, HIPCUB, HIPCUB_CONCAT(_, HIPCUB_VERSION, NS))
+    #endif
+    #define BEGIN_HIPCUB_INLINE_NAMESPACE        \
+        inline namespace HIPCUB_INLINE_NAMESPACE \
+        {
+    #define END_HIPCUB_INLINE_NAMESPACE } /* inline namespace */
+#endif
+
+#define BEGIN_HIPCUB_NAMESPACE \
+    namespace HIPCUB_NAMESPACE \
+    {                          \
+    BEGIN_HIPCUB_INLINE_NAMESPACE
+
+#define END_HIPCUB_NAMESPACE    \
+    END_HIPCUB_INLINE_NAMESPACE \
+    } /* namespace hipcub */
 
 #ifdef __HIP_PLATFORM_AMD__
     #define HIPCUB_ROCPRIM_API 1
