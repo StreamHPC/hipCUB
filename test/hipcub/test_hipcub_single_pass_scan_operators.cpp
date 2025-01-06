@@ -229,8 +229,8 @@ TYPED_TEST(HipcubSinglePassScanTest, IntSum)
             std::vector<value_type> output(num_tiles, make_value<value_type>{}(0));
 
             // Fill input with random data
-            std::default_random_engine            gen(seed_value);
-            std::uniform_int_distribution<int8_t> distribution(1, 16);
+            std::default_random_engine             gen(seed_value);
+            std::uniform_int_distribution<int32_t> distribution(1, 16);
             std::generate(input.begin(),
                           input.end(),
                           [&]() { return make_value<value_type>{}(distribution(gen)); });
@@ -338,8 +338,8 @@ TYPED_TEST(HipcubRunningPrefixTest, IntSum)
         std::vector<value_type> output(num_items, value_type(0));
 
         // Fill input with random data
-        std::default_random_engine            gen(seed_value);
-        std::uniform_int_distribution<int8_t> distribution(1, 16);
+        std::default_random_engine             gen(seed_value);
+        std::uniform_int_distribution<int32_t> distribution(1, 16);
         std::generate(input.begin(),
                       input.end(),
                       [&]() { return make_value<value_type>{}(distribution(gen)); });
