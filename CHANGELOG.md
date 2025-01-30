@@ -2,6 +2,13 @@
 
 Full documentation for hipCUB is available at [https://rocm.docs.amd.com/projects/hipCUB/en/latest/](https://rocm.docs.amd.com/projects/hipCUB/en/latest/).
 
+## (Unreleased) hipCUB-x.x.x for ROCm 7.x.x
+
+### Removed
+
+* Deprecated `hipcub::AsmThreadLoad` is removed, use `hipcub::ThreadLoad` instead.
+* Deprecated `hipcub::AsmThreadStore` is removed, use `hipcub::ThreadStore` instead.
+
 ## (Unreleased) hipCUB-3.5.0 for ROCm 6.5.0
 
 ### Added
