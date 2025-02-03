@@ -6,6 +6,7 @@ Full documentation for hipCUB is available at [https://rocm.docs.amd.com/project
 
 ### Removed
 
+* Removed C++14 support, only C++17 is supported.
 * Deprecated `hipcub::AsmThreadLoad` is removed, use `hipcub::ThreadLoad` instead.
 * Deprecated `hipcub::AsmThreadStore` is removed, use `hipcub::ThreadStore` instead.
 * Deprecated `BlockAdjacentDifference::FlagHeads`, `BlockAdjacentDifference::FlagTails` and `BlockAdjacentDifference::FlagHeadsAndTails` have been removed
